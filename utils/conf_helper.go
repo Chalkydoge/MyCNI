@@ -146,6 +146,10 @@ func GetHostGWPath() string {
 	return GetHostPath() + "/gateway"
 }
 
+func GetNetDevicePath(id string) string {
+	return GetHostPath() + "/" + id
+}
+
 // get gateway according to given ip
 func GetGateway(givenIP string) string {
 	// Assume givenIP is valid, and well-formated

@@ -5,7 +5,7 @@ import (
 
 	"mycni/etcdwrap"
 	"mycni/utils"
-
+	// current "github.com/containernetworking/cni/pkg/types/100"
 )
 
 func GetOneIPFromPool(poolKey string, cli *etcdwrap.WrappedClient) (string, error) {
@@ -90,78 +90,128 @@ func ReleaseHostIP(cli *etcdwrap.WrappedClient) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("Error when del host ip! err is %v", err)
 	}
+	err = cli.DelKV(utils.GetHostGWPath())
+	if err != nil {
+		return false, fmt.Errorf("Error when del host's gateway ip! err is %v", err)
+	}
 	return true, nil
 }
 
+// Allocate ip under certain host, fetch one from ip pool then assign to special device
+// Returns the IPConfig of CNI Standards
+func AllocateIP2Pod(containerID, ifname string, cli *etcdwrap.WrappedClient) (*current.IPConfig, error) {
+	// 1. read the hostname, query etcd
+	// find whether allocated subnet for this host
+	// hostname := utils.GetHostName()
+	hoststring, err := cli.GetKV(utils.GetHostPath())
+	if err != nil {
+		return nil, fmt.Errorf("Cannot get subnet for host %v", err)
+	}
 
-// func AllocateIP2Pod(containerID, ifname string) (*current.IPConfig, error) {
-// 	// 1. read the hostname, query etcd
-// 	// find whether allocated subnet for this host
-// 	// hostname := utils.GetHostName()
-// 	hoststring, err := cli.GetKV(utils.GetHostPath())
-// 	if err != nil {
-// 		return nil, fmt.Errorf("Cannot get subnet for host %v", err)
-// 	}
+	// hostsubnet like: 10.1.1.0/28
+	if hoststring == "" {
+		hoststring, err = AllocateIP2Host(cli)
+		if err != nil {
+			return nil, fmt.Errorf("Error when allocate ip2host: %v", err)
+		}
+	}
 
-// 	// hostsubnet like: 10.1.1.0/28
-// 	if hoststring == "" {
-// 		hoststring, err = AllocateIP2Host(cli)
-// 		if err != nil {
-// 			return nil, fmt.Errorf("Error when allocate ip2host: %v", err)
-// 		}
-// 	}
+	// Now we have host's subnet
+	var hostsubnet *net.IPNet
+	_, hostsubnet, err = net.ParseCIDR(hoststring)
+	if err != nil {
+		return nil, fmt.Errorf("Cannot parse hoststring as valid ipcidr! err is %v", err)
+	}
 
-// 	// Now we have host's subnet
-// 	var hostsubnet *net.IPNet
-// 	_, hostsubnet, err = net.ParseCIDR(hoststring)
-// 	if err != nil {
-// 		return nil, fmt.Errorf()
-// 	}
+	// 2. get the result of reserved IP and gateway for container
+	var reservedIP *net.IPNet
+	var gw net.IP
+	var gwip, allocatedIP string
 
-// 	// result of reserved IP and gateway for container
-// 	var reservedIP *net.IPNet
-// 	var gw net.IP
-// 	var gwip string
+	id := containerID + '-' + ifname
+	allocatedIP, err = cli.GetKV(utils.GetNetDevicePath(id))
+	if err != nil {
+		return nil, fmt.Errorf("Cannot get current network device! err is %v", err)
+	}
+	if allocatedIP != "" {
+		return nil, fmt.Errorf("%s has been allocated to container %s, device %s", allocatedIP, containerID, ifname)
+	}
 
-// 	id := containerID + '' + ifname
-// 	allocatedIP := GetByID(id)
-// 	if allocatedIP != "" {
-// 		return nil, fmt.Errorf("%s has been allocated to container %s, device %s", allocatedIP, containerID, ifname)
-// 	}
+	// Now we allocate one IP for it.
+	hostIPPool := cli.GetKV(utils.GetHostIPPoolPath())
+	ips := strings.Split(hostIPPool, ';')
+	if len(ips) <= 0 {
+		return nil, fmt.Error("All ip address has been used under this host!")
+	}
 
-// 	// Now we allocate one IP for it.
-// 	hostIPPool := cli.GetKV(utils.GetHostIPPoolPath())
-// 	ips := strings.Split(hostIPPool, ';')
-// 	if len(ips) <= 0 {
-// 		return nil, fmt.Error("All ip address has been used under this host!")
-// 	}
-
-// 	// convert into ip.Net object
-// 	newIp := net.ParseIP(ips[0]) // allocate for device
+	// convert into ip.Net object
+	newIp := net.ParseIP(ips[0]) // allocate for device
 	
-// 	// Then put it back
-// 	cli.PutKV(utils.GetHostIPPoolPath() , ips[1: ])
+	// Then put it back
+	cli.PutKV(utils.GetHostIPPoolPath(), ips[1: ])
 
-// 	// get host gw
-// 	gwpath := utils.GetHostGWPath()
-// 	gwip, err = cli.GetKV(gwpath)
-// 	if err != nil {
-// 		return "", fmt.Errorf("Cannot get gateway! Error is: %v", err)
-// 	}
-// 	gw = net.ParseIP(gwip)
+	// get host gw
+	gwpath := utils.GetHostGWPath()
+	gwip, err = cli.GetKV(gwpath)
+	if err != nil {
+		return "", fmt.Errorf("Cannot get gateway! Error is: %v", err)
+	}
+	gw = net.ParseIP(gwip)
 
-// 	reservedIP = &net.IPNet{IP: newIP, Mask: r.Subnet.Mask}
-// 	// Address: net.IPNet
-// 	// Gateway: net.IP
-// 	// allocate ip for containerid + ifname
-// 	ipconf := &current.IPConfig {
-// 		Address: newIp,
-// 		Gateway: gw,
-// 	}
+	reservedIP = &net.IPNet{IP: newIP, Mask: hostsubnet.Mask}
+	// Address: net.IPNet
+	// Gateway: net.IP
+	// allocate ip for containerid + ifname
+	ipconf := &current.IPConfig {
+		Address: *reservedIP,
+		Gateway: gw,
+	}
 
-// 	return ipconf, nil
-// }
+	// update current device's ip info into db
+	err = cli.PutKV(utils.GetNetDevicePath(id), newIP)
+	if err != nil {
+		return nil, fmt.Errorf("Error happened when writing new config into etcd! %v", err)
+	}
+	return ipconf, nil
+}
 
-// func ReleasePodIP() () {
+// Release pod ip with given containerID, ifname in skel.Args
+func ReleasePodIP(containerID, ifname string, cli *etcdwrap.WrappedClient) (bool, error) {
+	// get the result of reserved IP and gateway for container
+	id := containerID + '-' + ifname
+	allocatedIP, err = cli.GetKV(utils.GetNetDevicePath(id))
+	if err != nil {
+		return false, fmt.Errorf("Cannot get current network device! err is %v", err)
+	}
 
-// }
+	// so if allocated ip is empty, do nothing
+	if allocatedIP == "" {
+		return true, nil
+	}
+
+	// Now we allocate one IP for it.
+	hostIPPool := cli.GetKV(utils.GetHostIPPoolPath())
+	ips := strings.Split(hostIPPool, ';')
+	// Then put it back	
+	ips = append(ips, allocatedIP)
+	
+	// update back to hostpool
+	cli.PutKV(utils.GetHostIPPoolPath(), ips)
+
+
+	// update current device's ip info into db
+	err = cli.DelKV(utils.GetNetDevicePath(id))
+	if err != nil {
+		return false, fmt.Errorf("Error happened when removing config for device %s! error is %v", id, err)
+	}
+	return true, nil
+}
+
+// Release Host Gateway item
+func ReleaseHostGateway(cli *etcdwrap.WrappedClient) (bool, error) {
+	err := cli.DelKV(utils.GetHostGWPath())
+	if err != nil {
+		return false, fmt.Errorf("Cannot release host gateway ip %v", err)
+	}
+	return true, nil
+}

@@ -38,6 +38,11 @@ func TestAllocateIP2Host(t *testing.T) {
 	te.Nil(err)
 	te.Equal(res, expect_ip)
 
+	// Show whether gateway is assigned
+	res, err = cli.GetKV("mycni/ipam/master/gateway")
+	te.Nil(err)
+	t.Log("Expected gateway IP " + res + " of master node")
+
 	// try to restore back
 	r, err = ReleaseHostIP(cli)
 	te.Nil(err)
@@ -45,6 +50,11 @@ func TestAllocateIP2Host(t *testing.T) {
 
 	// double check that ip is released
 	res, err = cli.GetKV("mycni/ipam/master")
+	te.Nil(err)
+	te.Equal(res, "")
+
+	// double check that gateway ip is released
+	res, err = cli.GetKV("mycni/ipam/master/gateway")
 	te.Nil(err)
 	te.Equal(res, "")
 
