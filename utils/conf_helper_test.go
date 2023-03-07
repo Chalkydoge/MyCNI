@@ -11,8 +11,12 @@ func TestGetIps(t *testing.T) {
 	ips, err := GetValidIps("10.1.1.0/28")
 	te.NotNil(ips)
 	te.Nil(err)
-	te.Equal(ips[0], "10.1.1.2")
+	te.Equal(ips[0], "10.1.1.2/28")
+	
+	// there should be 14 available ip address
+	// exclude 10.1.1.0(neglected) & 10.1.1.1/28(default gw) 
 	te.Equal(len(ips), 14)
+	te.Equal(len(ips[1]), 11)
 }
 
 func TestGatewayIP(t *testing.T) {
@@ -20,7 +24,7 @@ func TestGatewayIP(t *testing.T) {
 
 	ip := GetGateway("10.1.1.0/28")
 	te.NotNil(ip)
-	te.Equal(ip, "10.1.1.1")
+	te.Equal(ip, "10.1.1.1/28")
 }
 
 func TestCommonGetPaths(t *testing.T) {

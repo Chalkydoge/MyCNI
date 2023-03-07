@@ -12,6 +12,7 @@ import(
 	"github.com/dlclark/regexp2"
 )
 
+// Forget about gateway, brdcast & default
 func invalidIP(ip string) bool {
 	parts := strings.Split(ip, ".")
 	n := len(parts) - 1	
@@ -21,9 +22,17 @@ func invalidIP(ip string) bool {
 	return false
 }
 
-// given cidr, list all ip address under this subnet
-// return: an ip list
+/* Given cidr, list all ip address under this subnet
+ * Return: an ip list, including mask length
+ * Like: 10.1.1.0/28, 10.1.1/28, ..., 10.1.1.15/28
+ */
 func listIPv4Addr(cidr string) ([]string, error) {
+	// We need to first split by '/'
+	sp := strings.Split(cidr, "/")
+	if len(sp) < 2 {
+		return nil, fmt.Errorf("Invalid cidr string!")
+	}
+
 	_, ipv4Net, err := net.ParseCIDR(cidr)
 	if err != nil {
 		return nil, fmt.Errorf("listIPv4Addr failed! %v", err)
@@ -35,15 +44,18 @@ func listIPv4Addr(cidr string) ([]string, error) {
 
 	var ips []string
 	for i := start; i <= fin; i++ {
+		// here, convert number to ip
 		ip := make(net.IP, 4)
 		binary.BigEndian.PutUint32(ip, i)
 		
-		// ip address => string here
+		// ip address to ip string here
 		ip_s := ip.String()
 		if invalidIP(ip_s) { 
 			continue
 		}
-		ips = append(ips, ip_s)
+
+		// concat with mask length in our ips
+		ips = append(ips, ip_s + "/" + sp[1])
 	}
 	return ips, nil
 }
@@ -136,12 +148,16 @@ func GetHostGWPath() string {
 
 // get gateway according to given ip
 func GetGateway(givenIP string) string {
+	// Assume givenIP is valid, and well-formated
 	segs := strings.Split(givenIP, "/")
 	ip_part := strings.Split(segs[0], ".")
 
 	n := len(ip_part)
 	ip_part[n - 1] = "1"
-	return strings.Join(ip_part, ".")
+
+	ip := strings.Join(ip_part, ".")
+	ip += "/" + segs[1]
+	return ip
 }
 
 // given a ip cidr, return useable ip addresses, (ignore 0, 1, 255)
