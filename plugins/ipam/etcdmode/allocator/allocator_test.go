@@ -6,6 +6,7 @@ import (
 
 	"mycni/etcdwrap"
 	"mycni/plugins/ipam/etcdmode/initpool"
+	current "github.com/containernetworking/cni/pkg/types/100"
 )
 
 func TestAllocateIP2Host(t *testing.T) {
@@ -42,52 +43,61 @@ func TestAllocateIP2Host(t *testing.T) {
 	res, err = cli.GetKV("mycni/ipam/master/gateway")
 	te.Nil(err)
 	t.Log("Expected gateway IP " + res + " of master node")
+}
+
+func TestAllocateIP2Pod(t *testing.T) {
+	// we have two container, with both 'eth0' in its ns
+	containerID := "dummy0"
+	containerID1 := "dummy1"
+	ifname := "eth0"
+
+	te := assert.New(t)
+
+	// init etcd client
+	etcdwrap.Init()
+	cli, err := etcdwrap.GetEtcdClient()
+	te.Nil(err)
+	te.NotNil(cli)
+	// te.Equal(cli.GetInitPoolStatus(), false)
+
+	// Allocate 2 devices here
+	var ipConf *current.IPConfig
+	ipConf, err = AllocateIP2Pod(containerID, ifname, cli)
+	te.Nil(err)
+	t.Log(ipConf)
+
+	ipConf, err = AllocateIP2Pod(containerID1, ifname, cli)
+	te.Nil(err)
+	t.Log(ipConf)
+
+	// try to release ip back
+	var releasePodRes bool
+	releasePodRes, err = ReleasePodIP(containerID, ifname, cli)
+	te.Nil(err)
+	te.Equal(releasePodRes, true)
+
+	releasePodRes, err = ReleasePodIP(containerID1, ifname, cli)
+	te.Nil(err)
+	te.Equal(releasePodRes, true)
 
 	// try to restore back
-	r, err = ReleaseHostIP(cli)
+	var releaseHostRes bool 
+	releaseHostRes, err = ReleaseHostIP(cli)
 	te.Nil(err)
-	te.Equal(r, true)
+	te.Equal(releaseHostRes, true)
 
 	// double check that ip is released
-	res, err = cli.GetKV("mycni/ipam/master")
+	var releasedIP string
+	releasedIP, err = cli.GetKV("mycni/ipam/master")
 	te.Nil(err)
-	te.Equal(res, "")
+	te.Equal(releasedIP, "")
 
 	// double check that gateway ip is released
-	res, err = cli.GetKV("mycni/ipam/master/gateway")
+	releasedIP, err = cli.GetKV("mycni/ipam/master/gateway")
 	te.Nil(err)
-	te.Equal(res, "")
-
-	// then release ip pool?
-	r, err = initpool.ReleasePool(cli)
-	te.Nil(err)
-	te.Equal(r, true)
-
-	// double check that ippool is released
-	res, err = cli.GetKV("mycni/ipam/pool")
-	te.Nil(err)
-	te.Equal(res, "")
+	te.Equal(releasedIP, "")
 
 	// finally release client
 	cli.CloseEtcdClient()
 	te.Nil(err)
 }
-
-// func TestPool(t *testing.T) {
-// 	te := assert.New(t)
-
-// 	etcdwrap.Init()
-// 	cli, err := etcdwrap.GetEtcdClient()
-// 	te.Nil(err)
-// 	te.NotNil(cli)
-// 	te.Equal(cli.GetInitPoolStatus(), false)
-
-// 	var r1, r2 bool
-// 	r1, err = InitPool(cli)
-// 	te.Nil(err)
-// 	te.Equal(r1, true)
-
-// 	r2, err = ReleasePool(cli)
-// 	te.Nil(err)
-// 	te.Equal(r2, true)	
-// }

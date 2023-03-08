@@ -3,27 +3,26 @@ package main
 import (
 	"fmt"
 	"mycni/utils"
+	"mycni/etcdwrap"
+	"mycni/plugins/ipam/etcdmode/allocator"
 
-	// "github.com/containernetworking/cni/pkg/skel"
+	bv "github.com/containernetworking/plugins/pkg/utils/buildversion"
+	"github.com/containernetworking/cni/pkg/skel"
+	"github.com/containernetworking/cni/pkg/version"
 	// "github.com/containernetworking/cni/pkg/types"
 	// current "github.com/containernetworking/cni/pkg/types/100"
-	// "github.com/containernetworking/cni/pkg/version"
 )
 
-// "192.168.64.0/24", &IPAMOptions{
-// 	RangeStart: "192.168.64.10",
-// 	RangeEnd:   "192.168.64.20",
-// }
-
-// subnet = IP4CIDR like 10.1.1.0/28
-// IPAM Options, like support rangeStart - rangeEnd
 func main() {
-	skel.PluginMain(cmdAdd, cmdCheck, cmdDel, version.All, bv.BuildString("host-local"))
+	skel.PluginMain(cmdAdd, cmdCheck, cmdDel, version.All, bv.BuildString("etcdmode"))
 }
 
 func cmdAdd(args *skel.CmdArgs) error {
 	// first load cni conf, with ipam config
-	confVersion, err := allocator.LoadIPAMConfig(args.StdinData, args.Args)
+	
+	// args.StdinData: json conf
+	// args.Args: string
+	ipam, confVersion, err := allocator.LoadIPAMConfig(args.StdinData, args.Args)
 	if err != nil {
 		return err
 	}
@@ -32,20 +31,65 @@ func cmdAdd(args *skel.CmdArgs) error {
 	// no dns here
 	// new store here
 	// since we use etcd for ip allocation, we don't need to store it locally.
-
-	ipConf, err := allocator.Get(args.ContainerID, args.IfName)
+	etcdwrap.Init()
+	cli, err := etcdwrap.GetEtcdClient()
 	if err != nil {
-		// Deallocate all already allocated IPs
-		for _, alloc := range allocs {
-			_ = alloc.Release(args.ContainerID, args.IfName)
-		}
-		return fmt.Errorf("failed to allocate for range %d: %v", idx, err)
+		return fmt.Errorf("failed to boot etcd client!")
 	}
 
-	allocs = append(allocs, allocator)
-	result.IPs = append(result.IPs, ipConf)
-	
-	result.Routes = ipamConf.Routes
+	ipConf, err := allocator.AllocateIP2Pod(args.ContainerID, args.IfName, cli)
+	if err != nil {
+		// TODO: Deallocate all already allocated IPs
+		_, err = allocator.ReleasePodIP(args.ContainerID, args.IfName)
+		if err != nil {
+			return fmt.Errorf("failed to allocate and release ip for container %s, err is %v", args.ContainerID, err)
+		}
+		return fmt.Errorf("failed to allocate for container %s, err is %v", args.ContainerID, err)
+	}
+
+	result.IPs = append(result.IPs, ipConf)	
+	// result.Routes = ipamConf.Routes
 	return types.PrintResult(result, confVersion)
 }
- 
+
+func cmdCheck(args *skel.CmdArgs) error {
+	ipamConf, _, err := allocator.LoadIPAMConfig(args.StdinData, args.Args)
+	if err != nil {
+		return err
+	}
+
+	// See if the container has been properly allocated with ip
+	cli, err := etcdwrap.GetEtcdClient()
+	if err != nil {
+		return fmt.Errorf("Failed to bootup etcd client! Error is %v", err)
+	}
+	containerIpFound := allocator.FindByID(args.ContainerID, args.IfName, cli)
+	if containerIpFound == false {
+		return fmt.Errorf("etcdmode: Failed to find address added by container %v", args.ContainerID)
+	}
+	return nil
+}
+
+func cmdDel(args *skel.CmdArgs) error {
+	ipamConf, _, err := allocator.LoadIPAMConfig(args.StdinData, args.Args)
+	if err != nil {
+		return err
+	}
+
+	cli, err := etcdwrap.GetEtcdClient()
+	if err != nil {
+		return fmt.Errorf("Failed to bootup etcd client! Error is %v", err)
+	}
+	// Loop through all ranges, releasing all IPs, even if an error occurs
+	var errors []string	
+	err := allocator.ReleasePodIP(args.ContainerID, args.IfName)
+	if err != nil {
+		errors = append(errors, err.Error())
+	}
+
+	if errors != nil {
+		return fmt.Errorf(strings.Join(errors, ";"))
+	}
+	
+	return nil
+}

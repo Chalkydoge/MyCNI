@@ -1,16 +1,24 @@
 package allocator
 
+import (
+	"encoding/json"
+	"fmt"
+
+	// "github.com/containernetworking/cni/pkg/types"
+	// "github.com/containernetworking/cni/pkg/version"
+)
+
 // The top-level network config - IPAM plugins are passed the full configuration
 // of the calling plugin, not just the IPAM section.
 type Net struct {
 	Name          string      `json:"name"`
 	CNIVersion    string      `json:"cniVersion"`
 	IPAM          *IPAMConfig `json:"ipam"`
-	RuntimeConfig struct {
-		// The capability arg
-		IPRanges []RangeSet `json:"ipRanges,omitempty"`
-		IPs      []*ip.IP   `json:"ips,omitempty"`
-	} `json:"runtimeConfig,omitempty"`
+	// RuntimeConfig struct {
+	// 	// The capability arg
+	// 	IPRanges []RangeSet `json:"ipRanges,omitempty"`
+	// 	IPs      []*ip.IP   `json:"ips,omitempty"`
+	// } `json:"runtimeConfig,omitempty"`
 	// Args *struct {
 	// 	A *IPAMArgs `json:"cni"`
 	// } `json:"args"`
@@ -22,14 +30,25 @@ type Net struct {
 type IPAMConfig struct {
 	Name       string
 	Type       string         `json:"type"`
-	Routes     []*types.Route `json:"routes,omitempty"`
-	DataDir    string         `json:"dataDir,omitempty""`
-	ResolvConf string         `json:"resolvConf,omitempty""`
-	Ranges     []RangeSet     `json:"ranges,omitempty""`
+	// Routes     []*types.Route `json:"routes,omitempty"`
+	// DataDir    string         `json:"dataDir,omitempty""`
+	// ResolvConf string         `json:"resolvConf,omitempty""`
+	// Ranges     []RangeSet     `json:"ranges,omitempty""`
 }
 
+/*
+	this is a net conf
+	{
+		"name" : "aaa",
+		"cniVersion" : "0.3.1",
+		"ipam": {
+			"name": "bbb",
+			"type": "ccc"
+		} 
+	}
+*/
 // NewIPAMConfig creates a NetworkConfig from the given network name.
-func LoadIPAMConfig(bytes []byte) (*IPAMConfig, string, error) {
+func LoadIPAMConfig(bytes []byte, envArgs string) (*IPAMConfig, string, error) {
 	n := Net{}
 	if err := json.Unmarshal(bytes, &n); err != nil {
 		return nil, "", err
@@ -41,6 +60,8 @@ func LoadIPAMConfig(bytes []byte) (*IPAMConfig, string, error) {
 
 	// Copy net name into IPAM so not to drag Net struct around
 	n.IPAM.Name = n.Name
+
+	fmt.Println("Env Args are: %s", envArgs)
 
 	return n.IPAM, n.CNIVersion, nil
 }
