@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/vishvananda/netlink"
-	// "github.com/containernetworking/plugins/pkg/ip"
 )
 
 func init() {
@@ -462,7 +461,6 @@ func cmdAdd(args *skel.CmdArgs) error {
 	success = true
 	return types.PrintResult(result, cniVersion)
 }
-
 
 func cmdDel(args *skel.CmdArgs) error {
 	n, _, err := loadNetConf(args.StdinData, args.Args)
