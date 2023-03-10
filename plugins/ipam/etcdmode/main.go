@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	// "mycni/utils"
+	"strings"
 	"mycni/etcdwrap"
 	"mycni/plugins/ipam/etcdmode/initpool"
 	"mycni/plugins/ipam/etcdmode/allocator"
@@ -76,29 +77,20 @@ func cmdCheck(args *skel.CmdArgs) error {
 }
 
 func cmdDel(args *skel.CmdArgs) error {
+	cli, err := etcdwrap.GetEtcdClient()
+	if err != nil {
+		return fmt.Errorf("Failed to bootup etcd client! Error is %v", err)
+	}
+	// Loop through all ranges, releasing all IPs, even if an error occurs
+	var errors []string	
+	_, err = allocator.ReleasePodIP(args.ContainerID, args.IfName, cli)
+	if err != nil {
+		errors = append(errors, err.Error())
+	}
+
+	if errors != nil {
+		return fmt.Errorf(strings.Join(errors, ";"))
+	}
+	
 	return nil
 }
-
-// func cmdDel(args *skel.CmdArgs) error {
-// 	ipamConf, _, err := allocator.LoadIPAMConfig(args.StdinData, args.Args)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	cli, err := etcdwrap.GetEtcdClient()
-// 	if err != nil {
-// 		return fmt.Errorf("Failed to bootup etcd client! Error is %v", err)
-// 	}
-// 	// Loop through all ranges, releasing all IPs, even if an error occurs
-// 	var errors []string	
-// 	err := allocator.ReleasePodIP(args.ContainerID, args.IfName)
-// 	if err != nil {
-// 		errors = append(errors, err.Error())
-// 	}
-
-// 	if errors != nil {
-// 		return fmt.Errorf(strings.Join(errors, ";"))
-// 	}
-	
-// 	return nil
-// }

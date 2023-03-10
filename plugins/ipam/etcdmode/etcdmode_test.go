@@ -37,10 +37,13 @@ func TestCmdAdd(t *testing.T) {
 	}
 
 	// Allocate the IP
-	err := cmdAdd(args)
+	r, _, err := testutils.CmdAddWithArgs(args, func() error {
+		return cmdAdd(args)
+	})
 	if err != nil {
 		t.Error("Cmd Add Failed: ", err)
 	}
+	t.Log(r)
 
 	// Print the result
 	// Now we have assigned valid ip for device, but no layer2 interfaces set
@@ -48,6 +51,34 @@ func TestCmdAdd(t *testing.T) {
 }
 
 func TestCmdCheck(t *testing.T) {
+	conf := fmt.Sprintf(`{
+		"cniVersion": "%s",
+		"name": "mynet",
+		"type": "abcde",
+		"master": "foo0",
+		"ipam": {
+			"type": "etcdmode"
+		}
+	}`, "1.0.0")
+
+	// Command Line Args for container info
+	args := &skel.CmdArgs{
+		ContainerID: "dummy",
+		Netns:       nspath,
+		IfName:      ifname,
+		StdinData:   []byte(conf),
+	}
+
+	// Allocate the IP
+	err := testutils.CmdCheckWithArgs(args, func() error {
+		return cmdCheck(args)
+	})
+	if err != nil {
+		t.Error("Cmd Check Failed: ", err)
+	}
+}
+
+func TestCmdDel(t *testing.T) {
 	cli, err := etcdwrap.GetEtcdClient()
 	defer cli.CloseEtcdClient()
 	if err != nil {
@@ -73,14 +104,10 @@ func TestCmdCheck(t *testing.T) {
 	}
 
 	// Allocate the IP
-	err = testutils.CmdCheckWithArgs(args, func() error {
-		return cmdCheck(args)
+	err = testutils.CmdDelWithArgs(args, func() error {
+		return cmdDel(args)
 	})
 	if err != nil {
-		t.Error("Cmd Check Failed: ", err)
+		t.Error("Cmd Del Failed: ", err)
 	}
 }
-
-// func TestCmdDel() {
-// 	defer cli.CloseEtcdClient()
-// }
