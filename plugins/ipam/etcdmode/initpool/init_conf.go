@@ -2,8 +2,6 @@ package initpool
 
 import (
 	"fmt"
-	"time"
-	"math/rand"
 	"strings"
 
 	"mycni/utils"
@@ -13,11 +11,8 @@ import (
 // Generate a list of ip, like 10.1.1.0/28,  10.1.2.0/28, ...
 func RandomGenerateIpCIDRs() []string {
 	ans := make([]string, 16)
-	rand.Seed(time.Now().UnixNano())
-
 	for i := 0; i < 16; i++ {
-		randomInt := rand.Intn(254) + 1
-		ans[i] = fmt.Sprintf("10.1.%d.0/28", randomInt)
+		ans[i] = fmt.Sprintf("10.1.%d.0/28", (i + 1))
 	}
 	return ans
 }

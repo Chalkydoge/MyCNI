@@ -5,7 +5,7 @@ import (
 	"time"
 	"context"
 	"mycni/consts"
-
+	"mycni/utils"
 	"go.etcd.io/etcd/pkg/transport"
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
@@ -42,7 +42,6 @@ func _innerGetEtcdClient() func() (*WrappedClient, error) {
 			}
 			
 			tlsConfig, err := tlsInfo.ClientConfig()
-			fmt.Println("TLS Config ok")
 
 			cli, err := clientv3.New(clientv3.Config{
 				Endpoints: []string{"127.0.0.1:2379", "10.128.47.22:2379"},
@@ -55,8 +54,6 @@ func _innerGetEtcdClient() func() (*WrappedClient, error) {
 				fmt.Errorf("Failed to connected etcd server, message: %w", err)
 				return nil, err
 			}
-
-			fmt.Println("Etcd Client ok")
 
 			_cli = &WrappedClient {
 				client: cli,
@@ -119,5 +116,12 @@ func (cli *WrappedClient) SetInitPoolStatus(stat bool) {
 
 // get pool status for other packages
 func (cli *WrappedClient) GetInitPoolStatus() bool {
-	return cli.poolInitStatus
+	resp, err := cli.GetKV(utils.GetIPPoolPath())
+	if err != nil {
+		return false
+	}
+	if resp != "" {
+		return true
+	}
+	return false
 }

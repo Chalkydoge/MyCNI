@@ -1,11 +1,8 @@
 package allocator
 
 import (
-	"net"
 	"testing"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/containernetworking/cni/pkg/types"
 )
 
 func TestLoadConfig(t *testing.T) {
@@ -31,4 +28,3 @@ func TestLoadConfig(t *testing.T) {
 		Type: "etcdmode",
 	})
 }
-

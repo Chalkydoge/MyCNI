@@ -130,16 +130,37 @@ func AllocateIP2Pod(containerID, ifname string, cli *etcdwrap.WrappedClient) (*c
 	var gw, newIp net.IP
 	var gwip, allocatedIP string
 
+	// get host gw
+	gwpath := utils.GetHostGWPath()
+	gwip, err = cli.GetKV(gwpath)
+	if err != nil {
+		return nil, fmt.Errorf("Cannot get gateway! Error is: %v", err)
+	}
+	gw, _, err = net.ParseCIDR(gwip)
+
+	// now check container
 	id := containerID + "-" + ifname
 	allocatedIP, err = cli.GetKV(utils.GetNetDevicePath(id))
 	if err != nil {
 		return nil, fmt.Errorf("Cannot get current network device! err is %v", err)
 	}
+	
+	// Already allocated
 	if allocatedIP != "" {
-		return nil, fmt.Errorf("%s has been allocated to container %s, device %s", allocatedIP, containerID, ifname)
+		allocatedIPAddr, _, err := net.ParseCIDR(allocatedIP) // allocated for device
+		if err != nil {
+			return nil, fmt.Errorf("Invalid ip cidr in allocated ip for container %s", id)
+		}
+		
+		reservedIP = &net.IPNet{IP: allocatedIPAddr, Mask: hostsubnet.Mask}
+
+		return &current.IPConfig {
+			Address: *reservedIP,
+			Gateway: gw,
+		}, nil
 	}
 
-	// Now we allocate one IP for it
+	// Not allocated, now we allocate one IP for it
 	var hostIPPool string
 	hostIPPool, err = cli.GetKV(utils.GetHostIPPoolPath())
 	ips := strings.Split(hostIPPool, ";")
@@ -149,17 +170,8 @@ func AllocateIP2Pod(containerID, ifname string, cli *etcdwrap.WrappedClient) (*c
 
 	// convert into ip.Net object
 	newIp, _, err = net.ParseCIDR(ips[0]) // allocate for device
-
 	// Then put it back
 	cli.PutKV(utils.GetHostIPPoolPath(), utils.ConvertArray2String(ips[1: ]))
-
-	// get host gw
-	gwpath := utils.GetHostGWPath()
-	gwip, err = cli.GetKV(gwpath)
-	if err != nil {
-		return nil, fmt.Errorf("Cannot get gateway! Error is: %v", err)
-	}
-	gw, _, err = net.ParseCIDR(gwip)
 
 	reservedIP = &net.IPNet{IP: newIp, Mask: hostsubnet.Mask}
 	// Address: net.IPNet
@@ -215,6 +227,19 @@ func ReleaseHostGateway(cli *etcdwrap.WrappedClient) (bool, error) {
 	err := cli.DelKV(utils.GetHostGWPath())
 	if err != nil {
 		return false, fmt.Errorf("Cannot release host gateway ip %v", err)
+	}
+	return true, nil
+}
+
+// Find assigned ip with given info
+func FindByID(containerID, ifname string, cli *etcdwrap.WrappedClient) (bool,error) {
+	id := containerID + "-" + ifname
+	res, err := cli.GetKV(utils.GetNetDevicePath(id))
+	if err != nil {
+		return false, fmt.Errorf("Error when get container info with id %s, %v", id, err)
+	}
+	if res == "" {
+		return false, nil
 	}
 	return true, nil
 }

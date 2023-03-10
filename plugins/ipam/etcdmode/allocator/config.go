@@ -3,9 +3,6 @@ package allocator
 import (
 	"encoding/json"
 	"fmt"
-
-	// "github.com/containernetworking/cni/pkg/types"
-	// "github.com/containernetworking/cni/pkg/version"
 )
 
 // The top-level network config - IPAM plugins are passed the full configuration
@@ -36,17 +33,7 @@ type IPAMConfig struct {
 	// Ranges     []RangeSet     `json:"ranges,omitempty""`
 }
 
-/*
-	this is a net conf
-	{
-		"name" : "aaa",
-		"cniVersion" : "0.3.1",
-		"ipam": {
-			"name": "bbb",
-			"type": "ccc"
-		} 
-	}
-*/
+
 // NewIPAMConfig creates a NetworkConfig from the given network name.
 func LoadIPAMConfig(bytes []byte, envArgs string) (*IPAMConfig, string, error) {
 	n := Net{}
@@ -61,8 +48,7 @@ func LoadIPAMConfig(bytes []byte, envArgs string) (*IPAMConfig, string, error) {
 	// Copy net name into IPAM so not to drag Net struct around
 	n.IPAM.Name = n.Name
 
-	fmt.Println("Env Args are: %s", envArgs)
-
+	// fmt.Println("Env Args are: %s", envArgs)
 	return n.IPAM, n.CNIVersion, nil
 }
 

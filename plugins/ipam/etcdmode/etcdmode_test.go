@@ -1,60 +1,86 @@
 package main
 
-// import(
-// 	"github.com/containernetworking/plugins/pkg/testutils"
-// )
+import(
+	"fmt"
+	"testing"
+	"mycni/etcdwrap"
 
-// const (
-// 	ifname string = "eth0"
-// 	nspath string = "/some/where"
-// )
+	"github.com/containernetworking/cni/pkg/skel"
+	"github.com/containernetworking/plugins/pkg/testutils"
+)
 
-// func TestA() {
-// 	// A demo cni plugin conf
-// 	conf := fmt.Sprintf(`{
-// 		"cniVersion": "%s",
-// 		"name": "mynet",
-// 		"type": "ipvlan",
-// 		"master": "foo0",
-// 			"ipam": {
-// 				"type": "etcdmode"
-// 			}
-// 	}`, ver)
+const (
+	ifname string = "eth0"
+	nspath string = "/some/where"
+)
 
-// 	// Command line args of cnio
-// 	args := &skel.CmdArgs{
-// 		ContainerID: "dummy",
-// 		Netns:       nspath,
-// 		IfName:      ifname,
-// 		StdinData:   []byte(conf),
-// 	}
-	
-// 	// Allocate the IP
-// 	r, raw, err := testutils.CmdAddWithArgs(args, func() error {
-// 		return cmdAdd(args)
-// 	})
-// 	Expect(err).NotTo(HaveOccurred())
-// 	if testutils.SpecVersionHasIPVersion(ver) {
-// 		Expect(strings.Index(string(raw), "\"version\":")).Should(BeNumerically(">", 0))
-// 	}
+func TestCmdAdd(t *testing.T) {
+	// Just for loop breaked with errors
+	// etcdwrap.Init()
 
-// 	result, err := types100.GetResult(r)
-// 	Expect(err).NotTo(HaveOccurred())
-// 	result, err := types100.GetResult(r)
-// 	Expect(err).NotTo(HaveOccurred())
+	conf := fmt.Sprintf(`{
+		"cniVersion": "%s",
+		"name": "mynet",
+		"type": "abcde",
+		"master": "foo0",
+		"ipam": {
+			"type": "etcdmode"
+		}
+	}`, "1.0.0")
 
-// 	// Gomega is cranky about slices with different caps
-// 	Expect(*result.IPs[0]).To(Equal(
-// 		types100.IPConfig{
-// 			Address: mustCIDR("10.1.2.2/24"),
-// 			Gateway: net.ParseIP("10.1.2.1"),
-// 		}))
+	// Command Line Args for container info
+	args := &skel.CmdArgs{
+		ContainerID: "dummy",
+		Netns:       nspath,
+		IfName:      ifname,
+		StdinData:   []byte(conf),
+	}
 
-// 	Expect(*result.IPs[1]).To(Equal(
-// 		types100.IPConfig{
-// 			Address: mustCIDR("2001:db8:1::2/64"),
-// 			Gateway: net.ParseIP("2001:db8:1::1"),
-// 		},
-// 	))
-// 	Expect(len(result.IPs)).To(Equal(2))
+	// Allocate the IP
+	err := cmdAdd(args)
+	if err != nil {
+		t.Error("Cmd Add Failed: ", err)
+	}
+
+	// Print the result
+	// Now we have assigned valid ip for device, but no layer2 interfaces set
+	// {1.0.0 [] [{Interface:<nil> Address:{IP:10.1.1.4 Mask:fffffff0} Gateway:10.1.1.1}] [] {[]  [] []}}
+}
+
+func TestCmdCheck(t *testing.T) {
+	cli, err := etcdwrap.GetEtcdClient()
+	defer cli.CloseEtcdClient()
+	if err != nil {
+		t.Error("Get Etcd Client failed! ", err)
+	}
+
+	conf := fmt.Sprintf(`{
+		"cniVersion": "%s",
+		"name": "mynet",
+		"type": "abcde",
+		"master": "foo0",
+		"ipam": {
+			"type": "etcdmode"
+		}
+	}`, "1.0.0")
+
+	// Command Line Args for container info
+	args := &skel.CmdArgs{
+		ContainerID: "dummy",
+		Netns:       nspath,
+		IfName:      ifname,
+		StdinData:   []byte(conf),
+	}
+
+	// Allocate the IP
+	err = testutils.CmdCheckWithArgs(args, func() error {
+		return cmdCheck(args)
+	})
+	if err != nil {
+		t.Error("Cmd Check Failed: ", err)
+	}
+}
+
+// func TestCmdDel() {
+// 	defer cli.CloseEtcdClient()
 // }

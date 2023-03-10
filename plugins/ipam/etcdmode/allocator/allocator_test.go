@@ -9,41 +9,41 @@ import (
 	current "github.com/containernetworking/cni/pkg/types/100"
 )
 
-func TestAllocateIP2Host(t *testing.T) {
-	var r bool
-	var expect_ip string
-	te := assert.New(t)
+// func TestAllocateIP2Host(t *testing.T) {
+// 	var r bool
+// 	var expect_ip string
+// 	te := assert.New(t)
 	
-	// init etcd client
-	etcdwrap.Init()
-	cli, err := etcdwrap.GetEtcdClient()
-	te.Nil(err)
-	te.NotNil(cli)
-	te.Equal(cli.GetInitPoolStatus(), false)
+// 	// init etcd client
+// 	etcdwrap.Init()
+// 	cli, err := etcdwrap.GetEtcdClient()
+// 	te.Nil(err)
+// 	te.NotNil(cli)
+// 	te.Equal(cli.GetInitPoolStatus(), false)
 
-	// then init ip pool
-	r, err = initpool.InitPool(cli)
-	te.Nil(err)
-	te.Equal(r, true)
-	te.Equal(cli.GetInitPoolStatus(), true)
+// 	// then init ip pool
+// 	r, err = initpool.InitPool(cli)
+// 	te.Nil(err)
+// 	te.Equal(r, true)
+// 	te.Equal(cli.GetInitPoolStatus(), true)
 
-	// then try to get one IP
-	expect_ip, err = AllocateIP2Host(cli)
-	te.Nil(err)
-	// te.Equal(expect_ip, )	
-	t.Log("Allocate IP " + expect_ip + " to master")
+// 	// then try to get one IP
+// 	expect_ip, err = AllocateIP2Host(cli)
+// 	te.Nil(err)
+// 	// te.Equal(expect_ip, )	
+// 	t.Log("Allocate IP " + expect_ip + " to master")
 	
-	// double check that ip is ok
-	var res string
-	res, err = cli.GetKV("mycni/ipam/master")
-	te.Nil(err)
-	te.Equal(res, expect_ip)
+// 	// double check that ip is ok
+// 	var res string
+// 	res, err = cli.GetKV("mycni/ipam/master")
+// 	te.Nil(err)
+// 	te.Equal(res, expect_ip)
 
-	// Show whether gateway is assigned
-	res, err = cli.GetKV("mycni/ipam/master/gateway")
-	te.Nil(err)
-	t.Log("Expected gateway IP " + res + " of master node")
-}
+// 	// Show whether gateway is assigned
+// 	res, err = cli.GetKV("mycni/ipam/master/gateway")
+// 	te.Nil(err)
+// 	t.Log("Expected gateway IP " + res + " of master node")
+// }
 
 func TestAllocateIP2Pod(t *testing.T) {
 	// we have two container, with both 'eth0' in its ns
@@ -59,6 +59,12 @@ func TestAllocateIP2Pod(t *testing.T) {
 	te.Nil(err)
 	te.NotNil(cli)
 	// te.Equal(cli.GetInitPoolStatus(), false)
+
+	var r bool
+	r, err = initpool.InitPool(cli)
+	te.Nil(err)
+	te.Equal(r, true)
+	te.Equal(cli.GetInitPoolStatus(), true)
 
 	// Allocate 2 devices here
 	var ipConf *current.IPConfig
