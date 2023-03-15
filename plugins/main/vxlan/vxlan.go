@@ -6,35 +6,38 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"encoding/json"
 	"math/rand"
 	"mycni/pkg/ipam"
 
 	"github.com/vishvananda/netlink"
 	"github.com/containernetworking/plugins/pkg/ns"
+	"github.com/containernetworking/cni/pkg/skel"
+	"github.com/containernetworking/cni/pkg/types"
+	current "github.com/containernetworking/cni/pkg/types/100"
 )
 
 type NetConf struct {
 	types.NetConf
-	BrName       string `json:"bridge"`
-	IsGW         bool   `json:"isGateway"`
-	IsDefaultGW  bool   `json:"isDefaultGateway"`
-	ForceAddress bool   `json:"forceAddress"`
-	IPMasq       bool   `json:"ipMasq"`
-	MTU          int    `json:"mtu"`
-	HairpinMode  bool   `json:"hairpinMode"`
-	PromiscMode  bool   `json:"promiscMode"`
-	Vlan         int    `json:"vlan"`
-	MacSpoofChk  bool   `json:"macspoofchk,omitempty"`
-	EnableDad    bool   `json:"enabledad,omitempty"`
+	
+	// Add a runtime config
+	// usage: Netconf has an item: capabilities
+	// cap {'aaa': true, 'bbb': false}, so aaa is acted & b is not
+	// by export CAP_ARGS = {'aaa': false, 'bbb': true}, user can close and open some abilities.
+	
+	// RuntimeConfig struct {
+	// 	// like setting default mac address
+	// 	Mac string `json:"mac,omitempty"`
+	// } `json:"runtimeConfig,omitempty"`
 
-	Args struct {
-		Cni BridgeArgs `json:"cni,omitempty"`
-	} `json:"args,omitempty"`
-	RuntimeConfig struct {
-		Mac string `json:"mac,omitempty"`
-	} `json:"runtimeConfig,omitempty"`
+	podname string
+	namespace string
+}
 
-	mac string
+type K8SEnvArgs struct {
+	types.CommonArgs
+	K8S_POD_NAMESPACE types.UnmarshallableString `json:"K8S_POD_NAMESPACE,omitempty"`
+	K8S_POD_NAME types.UnmarshallableString `json:"K8S_POD_NAME,omitempty"`
 }
 
 // cni interface needs:
@@ -83,39 +86,35 @@ func delInterfaceByName(name string) error {
 
 // load net conf
 func loadNetConf(bytes []byte, envArgs string) (*NetConf, string, error) {
-	n := &NetConf{
-		BrName: defaultBrName,
-	}
+	// first create an empty config
+	n := &NetConf{}
+
 	if err := json.Unmarshal(bytes, n); err != nil {
 		return nil, "", fmt.Errorf("failed to load netconf: %v", err)
 	}
-	if n.Vlan < 0 || n.Vlan > 4094 {
-		return nil, "", fmt.Errorf("invalid VLAN ID %d (must be between 0 and 4094)", n.Vlan)
-	}
-
+	
 	if envArgs != "" {
-		e := MacEnvArgs{}
+		e := K8SEnvArgs{}
 		if err := types.LoadArgs(envArgs, &e); err != nil {
 			return nil, "", err
 		}
-
-		if e.MAC != "" {
-			n.mac = string(e.MAC)
+		
+		// Loading some k8s arguments
+		if e.K8S_POD_NAME != "" {
+			n.podname = string(e.K8S_POD_NAME)
+		}
+		if e.K8S_POD_NAMESPACE != "" {
+			n.namespace = string(e.K8S_POD_NAMESPACE)
 		}
 	}
 
-	if mac := n.Args.Cni.Mac; mac != "" {
-		n.mac = mac
-	}
 
-	if mac := n.RuntimeConfig.Mac; mac != "" {
-		n.mac = mac
-	}
+	// if mac := n.RuntimeConfig.Mac; mac != "" {
+	// 	n.mac = mac
+	// }
 
 	return n, n.CNIVersion, nil
 }
-
-/*****************************************************************//
 
 // remove network interface by name
 func removeVethPair(name string) error {
@@ -235,39 +234,30 @@ func setupHostVethPair(veth ...*netlink.Veth) error {
 func setHostVethIntoHost(veth *netlink.Veth, netns ns.NetNS) error {
 	err := netlink.LinkSetNsFd(veth, int(netns.Fd()))
 	if err != nil {
-		return fmt.Errorf("failed to add the device %q to ns: %v", device.Attrs().Name, err)
+		return fmt.Errorf("failed to add the device %q to ns: %v", veth.Attrs().Name, err)
 	}
 	return nil
 }
 
 /****************************VXLAN part****************************/
 
-// get ns info with given ns name
-func getNetNS(_ns string) (*ns.NetNS, error) {
-	netns, err := ns.GetNS(_ns)
-	if err != nil {
-		return nil, err
-	}
-	return &netns, nil
-}
-
 // set ip addr for vxlan
 func setIPForVxlan(name, ipcidr string) error {
 	deviceType := "vxlan"
 	link, err := netlink.LinkByName(name)
 	if err != nil {
-		return fmt.Errorf("failed to get %s device by name %q, error: %v", deviceType, name, err)
+		return fmt.Errorf("failed to get %s device by name %q, error is: %v", deviceType, name, err)
 	}
 
 	ipaddr, ipnet, err := net.ParseCIDR(ipcidr)
 	if err != nil {
-		return fmt.Errorf("failed to transform the ip %q, error : %v", ip, err)
+		return fmt.Errorf("failed to transform the ip %q, error is: %v", ipaddr, err)
 	}
 
 	// ipnet.IP = ipaddr
 	err = netlink.AddrAdd(link, &netlink.Addr{IPNet: ipnet})
 	if err != nil {
-		return fmt.Errorf("can not add the ip %q to %s device %q, error: %v", ip, deviceType, name, err)
+		return fmt.Errorf("can not add the ip %q to %s device %q, error: %v", ipaddr, deviceType, name, err)
 	}
 	return nil	
 }
@@ -296,15 +286,16 @@ func deviceExistsIP(link *netlink.Veth) (string, error) {
 // set ip address into host veth endpoint
 func setIPIntoHostPair(gatewayIP string, veth *netlink.Veth) (string, error) {
 	// if already exists
-	if ipExist, err := deviceExistsIP(veth); err == nil && ipExist != "" {
-		return ipExist, nil
-	}
+	ipExist, err := deviceExistsIP(veth)
 	if err != nil {
 		return "", err
 	}
+	if ipExist != "" {
+		return ipExist, nil
+	}
 
 	// special 32 bit mask host
-	gatewayIPCIDR = fmt.Sprintf("%s/%s", gatewayIP, 32)
+	gatewayIPCIDR := fmt.Sprintf("%s/%s", gatewayIP, "32")
 	
 	// set this special ip address for veth's vxlan
 	return gatewayIPCIDR, setIPForVxlan(veth.Name, gatewayIPCIDR)
@@ -312,23 +303,27 @@ func setIPIntoHostPair(gatewayIP string, veth *netlink.Veth) (string, error) {
 
 // Note: given pod ip string is not in cidr form
 // setup ip address into pod veth endpoint
-func setIpIntoPodPair(podIP string, veth *netlink.Veth) (string, error) {
+func setIPIntoPodPair(podIP string, veth *netlink.Veth) (string, error) {
 	// special treatment
-	podIPCIDR = fmt.Sprintf("%s/%s", podIP, 32)
-	err = setIPForVxlan(veth.Name, podIPCIDR)
+	podIPCIDR := fmt.Sprintf("%s/%s", podIP, "32")
+	err := setIPForVxlan(veth.Name, podIPCIDR)
 	if err != nil {
 		return "", err
 	}
-	return podIPCIDR
+	return podIPCIDR, nil
 }
 
 // create veth pair inside given ns, from args
-func createNsVethPair(args *skel.CmdArgs) (error) {
+func createNsVethPair(args *skel.CmdArgs) (*netlink.Veth, *netlink.Veth, error) {
 	mtu := 1450 // ethernet 14 bytes, ip 20 bytes, udp 8 bytes, vxlan tags: 8 bytes => 50 bytes used, atmost 1450 bytes for payload
 	ifname := args.IfName
-	hostname = "test_pod_" + RandomVethName()
+	randomName, err := 	RandomVethName()
+	if err != nil {
+		return nil, nil, fmt.Errorf("Cannot generate random veth name because of %v", err)
+	}
+	hostname := "test_pod_" + randomName
 
-	// curr, other, mtu
+	// curr-endpoint, other-endpoint, mtu
 	return createVethPair(ifname, hostname, mtu)
 }
 
@@ -362,7 +357,7 @@ func setFIBTableIntoNS(gatewayIPCIDR string, veth *netlink.Veth) error {
 func CreateARPEntry(ip, mac, dev string) error {
 	processInfo := exec.Command(
 		"/bin/sh", "-c",
-		fmt.Sprintf("arp -s %s %s -i %s", ip, mac, dev)
+		fmt.Sprintf("arp -s %s %s -i %s", ip, mac, dev),
 	)
 	_, err := processInfo.Output()
 	return err
@@ -372,7 +367,7 @@ func CreateARPEntry(ip, mac, dev string) error {
 func DeleteARPEntry(ip, dev string) error {
 	processInfo := exec.Command(
 		"/bin/sh", "-c",
-		fmt.Sprintf("arp -d %s -i %s", ip, dev)
+		fmt.Sprintf("arp -d %s -i %s", ip, dev),
 	)
 	_, err := processInfo.Output()
 	return err
@@ -380,7 +375,7 @@ func DeleteARPEntry(ip, dev string) error {
 
 // set arp record, gatewayIP & gateway MAC for every pod ns devices
 func setARP(gatewayIP, deviceName string, hostNS ns.NetNS, veth *netlink.Veth) error {
-	err := hostns.Do(func() error {
+	err := hostNS.Do(func(newNS ns.NetNS) error {
 		v, err := netlink.LinkByName(veth.Attrs().Name)
 		if err != nil {
 			return err
@@ -390,7 +385,7 @@ func setARP(gatewayIP, deviceName string, hostNS ns.NetNS, veth *netlink.Veth) e
 		mac := veth.LinkAttrs.HardwareAddr
 		_mac := mac.String()
 		
-		return newNS.Do(func(hostNS net.NetNS) error {
+		return newNS.Do(func(hostNS ns.NetNS) error {
 			return CreateARPEntry(gatewayIP, _mac, deviceName)
 		})
 	})
@@ -399,8 +394,7 @@ func setARP(gatewayIP, deviceName string, hostNS ns.NetNS, veth *netlink.Veth) e
 }
 
 func createVXLAN(name string) (*netlink.Vxlan, error) {
-	defaultmtu := 1500
-
+	// defaultmtu := 1500
 	// If already exists vxlan link...
 	l, _ := netlink.LinkByName(name)
 	vxlan, ok := l.(*netlink.Vxlan)
@@ -410,7 +404,7 @@ func createVXLAN(name string) (*netlink.Vxlan, error) {
 
 	processInfo := exec.Command(
 		"/bin/sh", "-c",
-		fmt.Sprintf("ip link add name %s type vxlan external", name)
+		fmt.Sprintf("ip link add name %s type vxlan external", name),
 	)
 
 	_, err := processInfo.Output()
@@ -423,7 +417,7 @@ func createVXLAN(name string) (*netlink.Vxlan, error) {
 		return nil, err
 	}
 
-	vxlan, ok := l.(*netlink.Vxlan)
+	vxlan, ok = l.(*netlink.Vxlan)
 	if !ok {
 		return nil, fmt.Errorf("found the device %q but it's not a vxlan", name)
 	}
@@ -437,9 +431,16 @@ func createVXLAN(name string) (*netlink.Vxlan, error) {
 /*****************************************************/
 
 // command Add, setup vxlan with given ipam & args
-func cmdAdd(args *skel.CmdArgs) error {
+func cmdAdd(args *skel.CmdArgs) (error) {
 	// 1. init ipam plugin
 	var success bool = false
+
+	// args.Args like: 
+	// "Args: "K8S_POD_INFRA_CONTAINER_ID=308102901b7fe9538fcfc71669d505bc09f9def5eb05adeddb73a948bb4b2c8b;
+	// 		   K8S_POD_UID=d392609d-6aa2-4757-9745-b85d35e3d326;
+	//		   IgnoreUnknown=1;
+	//         K8S_POD_NAMESPACE=kube-system;
+	//         K8S_POD_NAME=coredns-c676cc86f-4kz2t","
 	n, cniVersion, err := loadNetConf(args.StdinData, args.Args)
 	if err != nil {
 		return err
@@ -448,9 +449,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 	// Assume L2 interface only
 	result := &current.Result{
 		CNIVersion: current.ImplementedSpecVersion,
-		Interfaces: []*current.Interface{
-
-		},
+		Interfaces: []*current.Interface{}, // nothing here
 	}
 
 	// need ipam?
@@ -472,21 +471,18 @@ func cmdAdd(args *skel.CmdArgs) error {
 			return err
 		}
 
-		result.IPS = ipamRes.IPS
-		result.Routes = {} // empty because we didn't realize it
-		result.DNS = {}
-
 		// Configure the container hardware address and IP address(es)
+		result.IPs = ipamRes.IPs
 	}
 
 	// 2. after ipam, create a veth pair, veth_host and veth_net as gateway pair
 	gatewaypair, netpair, err := createHostVethPair()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// setup netns
-	netns, err := GetNS(args.Netns)
+	netns, err := ns.GetNS(args.Netns)
 	if err != nil {
 		return fmt.Errorf("failed to open netns %q: %v", args.Netns, err)
 	}
@@ -495,7 +491,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 	// setup these devices
 	err = setupHostVethPair(gatewaypair, netpair)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// cidr /32 means only one address in this network
@@ -503,19 +499,22 @@ func cmdAdd(args *skel.CmdArgs) error {
 	// result.IPS contains both address & gateway
 
 	// gatewayIP is like: '10.1.1.1/32'
-	gatewayIP, err := setIpIntoHostPair(result.IPS[0].Gateway, gatewaypair)
+	// IPConfig
+
+	gatewayIPString := (result.IPs[0].Gateway).String() // is a net.IP object
+	gatewayIP, err := setIPIntoHostPair(gatewayIPString, gatewaypair)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	/* Inside every pod, init the network */
 	var podPair, hostPair *netlink.Veth
-	var podIP string
+	// var podIP string
 
 	// enter pod ns, do the follow things
-	err = (*netns).Do(func(hostNS ns.NetNS) error {
+	err = netns.Do(func(hostNS ns.NetNS) error {
 		// create a veth pair, one for pod and one for host
-		podPair, hostPair, err = createNsVethPair(args, pluginConfig)
+		podPair, hostPair, err = createNsVethPair(args)
 		if err != nil {
 			return err
 		}
@@ -528,7 +527,12 @@ func cmdAdd(args *skel.CmdArgs) error {
 		
 		// set pod veth's end to be gateway(/32)
 		// todo: etcd will acknowledge other nodes
-		podIP, err = setIpIntoPodPair(result.IPS[0].Address.IP, podPair)
+		
+		podIPString := result.IPs[0].Address.String() // is an ipnet
+		if err != nil {
+			return err
+		}
+		_, err = setIPIntoPodPair(podIPString, podPair)
 		if err != nil {
 			return err
 		}
@@ -549,18 +553,26 @@ func cmdAdd(args *skel.CmdArgs) error {
 
 		// then set arp info for layer 2 traffic
 		// Note: gatewayIP is with /mask here! need to remove!
-		pureGatewayIP := string.Splits(gatewayIP, "/")
-		err = setARP(pureGatewayIP[0], args.IfName, hostNS, hostPair)
+		// pureGatewayIP := strings.Split(gatewayIP, "/")
+		err = setARP(gatewayIPString, args.IfName, hostNS, hostPair)
 		if err != nil {
 			return err
 		}
 
 		// then boot host veth end
-		err = setupHostPair(hostNS, hostPair)
+		err = hostNS.Do(func(newNS ns.NetNS) error {
+			v, err := netlink.LinkByName(hostPair.Attrs().Name)
+			if err != nil {
+				return err
+			}
+			tmpVeth := v.(*netlink.Veth)
+			return setupVeth(tmpVeth)
+		})
+
 		if err != nil {
 			return err
 		}
-
+		
 		// write veth pair info LINUX_CONTAINER_MAP / LXC_MAP_DEFAULT_PATH
 		// err = setVethPairInfoToLxcMap(bpfmap, hostNs, podIP, hostPair, nsPair)
 		// if err != nil {
@@ -571,20 +583,14 @@ func cmdAdd(args *skel.CmdArgs) error {
 		return nil
 	})
 
-	if err != nil {
-		return nil, err
-	}
 
 	// attach bpf to host veth tc ingress
 	// err = attachBPF2Veth(hostPair)
-	// if err != nil {
-	// 	return nil, err
-	// }
 
 	// create a vxlan device
-	vxlan, err := createVXLAN("any_vxlan_name_you_like")
+	_, err = createVXLAN("any_vxlan_name_you_like")
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// TODO!
@@ -615,5 +621,6 @@ func cmdAdd(args *skel.CmdArgs) error {
 	// 	},
 	// }
 	
-	return result, nil	
+	success = true
+	return types.PrintResult(result, cniVersion)
 }

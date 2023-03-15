@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	// "mycni/utils"
 	"strings"
 	"mycni/etcdwrap"
 	"mycni/plugins/ipam/etcdmode/initpool"

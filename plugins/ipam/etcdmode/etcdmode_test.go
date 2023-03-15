@@ -17,7 +17,6 @@ const (
 func TestCmdAdd(t *testing.T) {
 	// Just for loop breaked with errors
 	// etcdwrap.Init()
-
 	conf := fmt.Sprintf(`{
 		"cniVersion": "%s",
 		"name": "mynet",
