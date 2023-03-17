@@ -3,8 +3,10 @@ package vxlan
 import (
 	"fmt"
 	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/containernetworking/cni/pkg/skel"
+	"github.com/containernetworking/plugins/pkg/ns"
 )
 
 func TestRandomVethNames(t *testing.T) {
@@ -14,20 +16,20 @@ func TestRandomVethNames(t *testing.T) {
 	t.Log("veth name is ", vethname)
 }
 
-// func TestAddVethPairs(t *testing.T) {
-// 	te := assert.New(t)
-// 	netVeth, hostVeth, err := createHostVethPair()
-// 	te.Nil(err)
-// 	t.Log("Net veth conf: ", netVeth)
-// 	t.Log("Host veth conf: ", hostVeth)
-// }
+func TestAddVethPairs(t *testing.T) {
+	te := assert.New(t)
+	netVeth, hostVeth, err := createHostVethPair()
+	te.Nil(err)
+	t.Log("Net veth conf: ", netVeth)
+	t.Log("Host veth conf: ", hostVeth)
+}
 
-// func TestRemoveHostVethPairs(t *testing.T) {
-// 	te := assert.New(t)
-// 	// only need to remove one end
-// 	err := removeHostVethPair("veth_host")
-// 	te.Nil(err)
-// }
+func TestRemoveHostVethPairs(t *testing.T) {
+	te := assert.New(t)
+	// only need to remove one end
+	err := removeHostVethPair("veth_host")
+	te.Nil(err)
+}
 
 
 func TestLoadNetConf(t *testing.T) {
@@ -53,7 +55,7 @@ func TestLoadNetConf(t *testing.T) {
 	n, cniVersion, err := loadNetConf(args.StdinData, args.Args)
 	te.Nil(err)
 	te.Equal(cniVersion, "1.0.0")
-	// t.Log(n)
+	t.Log(n)
 }
 
 func TestIPAM(t *testing.T) {
@@ -87,14 +89,13 @@ func TestIPAM(t *testing.T) {
 	// ipamRes := &{1.0.0 [] [{Interface:<nil> Address:{IP:10.1.1.6 Mask:fffffff0} Gateway:10.1.1.1}] [] {[]  [] []}}
 	ipamRes := current.Result {
 		CNIVersion: "1.0.0",
-		Interfaces:  [],
-		IPs: &[
-			{
+		Interfaces: []*current.Interface{},
+		IPs: []*current.IPConfig
+		{
 				Interface: nil,
 				Address: net.parseIP("10.1.1.6/28"),
 				Gateway: net.ParseIP("10.1.1.1"),
-			}
-		],
+		},
 		Routes:     [],
 		DNS:        {[],[],[]},
 	}
@@ -104,32 +105,31 @@ func TestIPAM(t *testing.T) {
 }
 
 // Test from step 2 - step 6 
-func TestHostSetup(t *testing.T) {
-	te := assert.New(t)
+// func TestHostSetup(t *testing.T) {
+// 	te := assert.New(t)
 
-	// 2. after ipam, create a veth pair, veth_host and veth_net as gateway pair
-	gatewaypair, netpair, err := createHostVethPair()
-	te.Nil(err)
+// 	// 2. after ipam, create a veth pair, veth_host and veth_net as gateway pair
+// 	gatewaypair, netpair, err := createHostVethPair()
+// 	te.Nil(err)
 
-	// setup netns, assume it is 'ns1'
-	netns, err := ns.GetNS("/var/run/netns/ns1")
-	te.NIl(err)
-	defer netns.Close()
+// 	// setup netns, assume it is 'ns1'
+// 	netns, err := ns.GetNS("/var/run/netns/ns1")
+// 	te.Nil(err)
+// 	defer netns.Close()
 
-	// setup these devices
-	err = setupHostVethPair(gatewaypair, netpair)
-	te.Nil(err)
+// 	// setup these devices
+// 	err = setupHostVethPair(gatewaypair, netpair)
+// 	te.Nil(err)
 
-	// cidr /32 means only one address in this network
-	// special ip for gateway
-	// result.IPS contains both address & gateway
-	// gatewayIP is like: '10.1.1.1/32'
-	// IPConfig
-	gatewayIP, err := setIPIntoHostPair("10.1.1.1", gatewaypair)
-	if err != nil {
-		return err
-	}
-	te.Nil(err)
-	te.Equal(gatewayIP, "10.1.1.1/32")
-	
-}
+// 	// cidr /32 means only one address in this network
+// 	// special ip for gateway
+// 	// result.IPS contains both address & gateway
+// 	// gatewayIP is like: '10.1.1.1/32'
+// 	// IPConfig
+// 	gatewayIP, err := setIPIntoHostPair("10.1.1.1", gatewaypair)
+// 	te.Nil(err)
+// 	te.Equal(gatewayIP, "10.1.1.1/32")
+
+// 	err = removeHostVethPair("veth_host")
+// 	te.Nil(err)
+// }

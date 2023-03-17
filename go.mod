@@ -3,6 +3,7 @@ module mycni
 go 1.18
 
 require (
+	github.com/cilium/ebpf v0.10.0
 	github.com/containernetworking/cni v1.1.2
 	github.com/containernetworking/plugins v1.2.0
 	github.com/dlclark/regexp2 v1.8.1
