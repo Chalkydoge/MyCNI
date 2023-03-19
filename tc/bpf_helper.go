@@ -2,6 +2,7 @@ package tc
 
 import (
 	"fmt"
+	"mycni/consts"
 	"os/exec"
 	"strings"
 )
@@ -13,6 +14,18 @@ const (
 	INGRESS BPF_TC_DIRECT = "ingress"
 	EGRESS  BPF_TC_DIRECT = "egress"
 )
+
+func GetVethIngressPath() string {
+	return consts.K8S_CNI_PATH + "/veth_ingress.o"
+}
+
+func GetVxlanIngressPath() string {
+	return consts.K8S_CNI_PATH + "/vxlan_ingress.o"
+}
+
+func GetVxlanEgressPath() string {
+	return consts.K8S_CNI_PATH + "/vxlan_egress.o"
+}
 
 // Check if there is alreay bpf prog binded to device's ingress queue
 func ExistOnIngress(device string) bool {

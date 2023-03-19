@@ -1,43 +1,47 @@
 package vxlan
 
 import (
+	"encoding/json"
 	"fmt"
+	"math/rand"
+	"mycni/bpfmap"
+	"mycni/pkg/ipam"
+	"mycni/tc"
+
 	"net"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
-	"encoding/json"
-	"math/rand"
-	"mycni/pkg/ipam"
 
-	"github.com/vishvananda/netlink"
-	"github.com/containernetworking/plugins/pkg/ns"
 	"github.com/containernetworking/cni/pkg/skel"
 	"github.com/containernetworking/cni/pkg/types"
 	current "github.com/containernetworking/cni/pkg/types/100"
+	"github.com/containernetworking/plugins/pkg/ns"
+	"github.com/vishvananda/netlink"
 )
 
 type NetConf struct {
 	types.NetConf
-	
+
 	// Add a runtime config
 	// usage: Netconf has an item: capabilities
 	// cap {'aaa': true, 'bbb': false}, so aaa is acted & b is not
 	// by export CAP_ARGS = {'aaa': false, 'bbb': true}, user can close and open some abilities.
-	
+
 	// RuntimeConfig struct {
 	// 	// like setting default mac address
 	// 	Mac string `json:"mac,omitempty"`
 	// } `json:"runtimeConfig,omitempty"`
 
-	podname string
+	podname   string
 	namespace string
 }
 
 type K8SEnvArgs struct {
 	types.CommonArgs
 	K8S_POD_NAMESPACE types.UnmarshallableString `json:"K8S_POD_NAMESPACE,omitempty"`
-	K8S_POD_NAME types.UnmarshallableString `json:"K8S_POD_NAME,omitempty"`
+	K8S_POD_NAME      types.UnmarshallableString `json:"K8S_POD_NAME,omitempty"`
 }
 
 // cni interface needs:
@@ -68,7 +72,7 @@ func AddRoute(ipn *net.IPNet, gw net.IP, dev netlink.Link, scope ...netlink.Scop
 		Dst:       ipn,
 		Gw:        gw,
 	})
-} 
+}
 
 // delete netlink devices by name
 func delInterfaceByName(name string) error {
@@ -92,13 +96,13 @@ func loadNetConf(bytes []byte, envArgs string) (*NetConf, string, error) {
 	if err := json.Unmarshal(bytes, n); err != nil {
 		return nil, "", fmt.Errorf("failed to load netconf: %v", err)
 	}
-	
+
 	if envArgs != "" {
 		e := K8SEnvArgs{}
 		if err := types.LoadArgs(envArgs, &e); err != nil {
 			return nil, "", err
 		}
-		
+
 		// Loading some k8s arguments
 		if e.K8S_POD_NAME != "" {
 			n.podname = string(e.K8S_POD_NAME)
@@ -107,7 +111,6 @@ func loadNetConf(bytes []byte, envArgs string) (*NetConf, string, error) {
 			n.namespace = string(e.K8S_POD_NAMESPACE)
 		}
 	}
-
 
 	// if mac := n.RuntimeConfig.Mac; mac != "" {
 	// 	n.mac = mac
@@ -131,7 +134,7 @@ func removeVethPair(name string) error {
 }
 
 // create a veth pair with ifname, mtu and hostname
-func createVethPair(name, peername string, mtu int) (*netlink.Veth, *netlink.Veth, error) {	
+func createVethPair(name, peername string, mtu int) (*netlink.Veth, *netlink.Veth, error) {
 	// Find peer name that is not used
 	if peername == "" {
 		for {
@@ -140,14 +143,14 @@ func createVethPair(name, peername string, mtu int) (*netlink.Veth, *netlink.Vet
 			if err != nil {
 				return nil, nil, err
 			}
-	
+
 			_, err = netlink.LinkByName(peername)
 			if err != nil && !os.IsExist(err) {
 				break
 			}
 		}
 	}
-	
+
 	// if cannot get peername
 	if peername == "" {
 		return nil, nil, fmt.Errorf("create veth pair's name error")
@@ -159,7 +162,7 @@ func createVethPair(name, peername string, mtu int) (*netlink.Veth, *netlink.Vet
 			MTU:  mtu,
 			// Namespace: netlink.NsFd(int(ns.Fd())),
 		},
-		PeerName:	peername,
+		PeerName: peername,
 		// PeerNamespace: netlink.NsFd(int(hostNS.Fd())),
 	}
 
@@ -188,7 +191,7 @@ func createVethPair(name, peername string, mtu int) (*netlink.Veth, *netlink.Vet
 }
 
 // remove veth pair made for hostside and netside
-func removeHostVethPair(name string) (error) {
+func removeHostVethPair(name string) error {
 	err := removeVethPair(name)
 	if err != nil {
 		return err
@@ -197,7 +200,7 @@ func removeHostVethPair(name string) (error) {
 }
 
 // create veth pair for hostside and netside
-func createHostVethPair() (*netlink.Veth, *netlink.Veth, error)  {
+func createHostVethPair() (*netlink.Veth, *netlink.Veth, error) {
 	hostVeth, _ := netlink.LinkByName("veth_host")
 	netVeth, _ := netlink.LinkByName("veth_net")
 
@@ -259,7 +262,7 @@ func setIPForVxlan(name, ipcidr string) error {
 	if err != nil {
 		return fmt.Errorf("can not add the ip %q to %s device %q, error: %v", ipaddr, deviceType, name, err)
 	}
-	return nil	
+	return nil
 }
 
 // veth exists ip?
@@ -296,7 +299,7 @@ func setIPIntoHostPair(gatewayIP string, veth *netlink.Veth) (string, error) {
 
 	// special 32 bit mask host
 	gatewayIPCIDR := fmt.Sprintf("%s/%s", gatewayIP, "32")
-	
+
 	// set this special ip address for veth's vxlan
 	return gatewayIPCIDR, setIPForVxlan(veth.Name, gatewayIPCIDR)
 }
@@ -317,7 +320,7 @@ func setIPIntoPodPair(podIP string, veth *netlink.Veth) (string, error) {
 func createNsVethPair(args *skel.CmdArgs) (*netlink.Veth, *netlink.Veth, error) {
 	mtu := 1450 // ethernet 14 bytes, ip 20 bytes, udp 8 bytes, vxlan tags: 8 bytes => 50 bytes used, atmost 1450 bytes for payload
 	ifname := args.IfName
-	randomName, err := 	RandomVethName()
+	randomName, err := RandomVethName()
 	if err != nil {
 		return nil, nil, fmt.Errorf("Cannot generate random veth name because of %v", err)
 	}
@@ -384,7 +387,7 @@ func setARP(gatewayIP, deviceName string, hostNS ns.NetNS, veth *netlink.Veth) e
 		veth = v.(*netlink.Veth)
 		mac := veth.LinkAttrs.HardwareAddr
 		_mac := mac.String()
-		
+
 		return newNS.Do(func(hostNS ns.NetNS) error {
 			return CreateARPEntry(gatewayIP, _mac, deviceName)
 		})
@@ -428,14 +431,108 @@ func createVXLAN(name string) (*netlink.Vxlan, error) {
 	return vxlan, nil
 }
 
+/*******************BPF MAP***************************/
+
+func stuff8Byte(b []byte) [8]byte {
+	var res [8]byte
+	if len(b) > 8 {
+		b = b[0:9]
+	}
+
+	for index, _byte := range b {
+		res[index] = _byte
+	}
+	return res
+}
+
+func InetIpToUInt32(ip string) uint32 {
+	bits := strings.Split(ip, ".")
+	b0, _ := strconv.Atoi(bits[0])
+	b1, _ := strconv.Atoi(bits[1])
+	b2, _ := strconv.Atoi(bits[2])
+	b3, _ := strconv.Atoi(bits[3])
+	var sum uint32
+	sum += uint32(b0) << 24
+	sum += uint32(b1) << 16
+	sum += uint32(b2) << 8
+	sum += uint32(b3)
+	return sum
+}
+
+// set veth pair info into linux-container-map
+func setVethPairInfo2LxcMap(hostNS ns.NetNS, podIP string, hostVeth, nsVeth *netlink.Veth) error {
+	err := hostNS.Do(func(newNS ns.NetNS) error {
+		v, err := netlink.LinkByName(hostVeth.Attrs().Name)
+		if err != nil {
+			return err
+		}
+		hostVeth = v.(*netlink.Veth)
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	netip, _, err := net.ParseCIDR(podIP)
+	if err != nil {
+		return err
+	}
+
+	podIP = netip.String()
+
+	hostVethIndex := uint32(hostVeth.Attrs().Index)
+	hostVethMac := stuff8Byte(([]byte)(hostVeth.Attrs().HardwareAddr))
+	nsVethIndex := uint32(nsVeth.Attrs().Index)
+	nsVethMac := stuff8Byte(([]byte)(nsVeth.Attrs().HardwareAddr))
+
+	_, err = bpfmap.CreateLxcMap()
+	if err != nil {
+		return err
+	}
+
+	return bpfmap.SetLxcMap(
+		bpfmap.EndpointMapKey{},
+		bpfmap.EndpointMapInfo{
+			// pod net device index
+			IfIndex: nsVethIndex,
+			// host device index
+			LXCIfIndex: hostVethIndex,
+			MAC:        nsVethMac,
+			NodeMAC:    hostVethMac,
+		},
+	)
+}
+
+// attach bpf program to veth device
+//
+// note: veth ingress is binded with bpf prog
+func attachBPF2Veth(veth *netlink.Veth) error {
+	name := veth.Attrs().Name
+	vethIngressPath := tc.GetVethIngressPath()
+	return tc.AttachBPF2Device(name, vethIngressPath, tc.INGRESS)
+}
+
+// attach bpf prog to vxlan(both ingress and egress)
+func attachBPF2VXLAN(vxlan *netlink.Vxlan) error {
+	name := vxlan.Attrs().Name
+	ingressPath := tc.GetVxlanIngressPath()
+	err := tc.AttachBPF2Device(name, ingressPath, tc.INGRESS)
+	if err != nil {
+		return err
+	}
+
+	egressPath := tc.GetVxlanEgressPath()
+	return tc.AttachBPF2Device(name, egressPath, tc.EGRESS)
+}
+
 /*****************************************************/
 
 // command Add, setup vxlan with given ipam & args
-func cmdAdd(args *skel.CmdArgs) (error) {
+func cmdAdd(args *skel.CmdArgs) error {
 	// 1. init ipam plugin
 	var success bool = false
 
-	// args.Args like: 
+	// args.Args like:
 	// "Args: "K8S_POD_INFRA_CONTAINER_ID=308102901b7fe9538fcfc71669d505bc09f9def5eb05adeddb73a948bb4b2c8b;
 	// 		   K8S_POD_UID=d392609d-6aa2-4757-9745-b85d35e3d326;
 	//		   IgnoreUnknown=1;
@@ -454,7 +551,7 @@ func cmdAdd(args *skel.CmdArgs) (error) {
 
 	// need ipam?
 	isLayer3 := (n.IPAM.Type != "")
-	if (isLayer3) {
+	if isLayer3 {
 		r, err := ipam.ExecAdd(n.IPAM.Type, args.StdinData)
 		if err != nil {
 			return err
@@ -509,7 +606,7 @@ func cmdAdd(args *skel.CmdArgs) (error) {
 
 	/* Inside every pod, init the network */
 	var podPair, hostPair *netlink.Veth
-	// var podIP string
+	var podIPString string
 
 	// enter pod ns, do the follow things
 	err = netns.Do(func(hostNS ns.NetNS) error {
@@ -524,11 +621,11 @@ func cmdAdd(args *skel.CmdArgs) (error) {
 		if err != nil {
 			return err
 		}
-		
+
 		// set pod veth's end to be gateway(/32)
 		// todo: etcd will acknowledge other nodes
-		
-		podIPString := result.IPs[0].Address.String() // is an ipnet
+
+		podIPString = result.IPs[0].Address.String() // is an ipnet
 		if err != nil {
 			return err
 		}
@@ -542,7 +639,7 @@ func cmdAdd(args *skel.CmdArgs) (error) {
 		if err != nil {
 			return err
 		}
-		
+
 		// FIB: forward information base
 		// mapping between [mac addr -> ports]
 		// layer 2 traffic to available ports
@@ -572,27 +669,33 @@ func cmdAdd(args *skel.CmdArgs) (error) {
 		if err != nil {
 			return err
 		}
-		
+
 		// write veth pair info LINUX_CONTAINER_MAP / LXC_MAP_DEFAULT_PATH
-		// err = setVethPairInfoToLxcMap(bpfmap, hostNs, podIP, hostPair, nsPair)
-		// if err != nil {
-		//   return err
-		// }
+		err = setVethPairInfo2LxcMap(hostNS, podIPString, hostPair, podPair)
+		if err != nil {
+			return err
+		}
 
 		// Write veth pair ip, node ip mapping into NODE_LOCAL_MAP_DEFAULT_PATH
 		return nil
 	})
 
-
 	// attach bpf to host veth tc ingress
-	// err = attachBPF2Veth(hostPair)
-
-	// create a vxlan device
-	_, err = createVXLAN("any_vxlan_name_you_like")
+	err = attachBPF2Veth(hostPair)
 	if err != nil {
 		return err
 	}
 
+	// create a vxlan device
+	vxlan, err := createVXLAN("my_vxlan")
+	if err != nil {
+		return err
+	}
+
+	err = attachBPF2VXLAN(vxlan)
+	if err != nil {
+		return err
+	}
 	// TODO!
 	// Add vxlan info into BPFMAP/NODE_LOCAL_MAP_DEFAULT_PATH
 	// err = setVxlanInfoToLocalMap(bpfmap, vxlan)
@@ -600,27 +703,21 @@ func cmdAdd(args *skel.CmdArgs) (error) {
 	// 	return nil, err
 	// }
 
-	// attach BPF to both VXLAN device, tc's ingress and egress
-	// err = attachTcBPFIntoVxlan(vxlan)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
 	// Finally for CNI result output,
 	// since last part we have these information, we don't need to do it again
-	
-	// _gatewayIP, _, _ := net.ParseCIDR(gatewayIP)
-	// _, _podIPNet, _ := net.ParseCIDR(podIP)
-	// result := &types.Result{
-	// 	CNIVersion: pluginConfig.CNIVersion,
-	// 	IPs: []*types.IPConfig{
-	// 		{
-	// 			Address: *_podIPNet,
-	// 			Gateway: _gatewayIP,
-	// 		},
-	// 	},
-	// }
-	
+	_gatewayIP, _, _ := net.ParseCIDR(gatewayIP)
+	_, _podIPNet, _ := net.ParseCIDR(podIPString)
+
+	podInterfaceIndex := (podPair.Attrs().Index)
+	result.IPs = append(result.IPs, &current.IPConfig{
+		Interface: &podInterfaceIndex,
+		Address:   *_podIPNet,
+		Gateway:   _gatewayIP,
+	})
 	success = true
 	return types.PrintResult(result, cniVersion)
+}
+
+func cmdCheck() error {
+	return nil
 }
