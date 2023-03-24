@@ -7,8 +7,10 @@ import (
 )
 
 const (
-	LXC_MAP_DEFAULT_PATH = "/sys/fs/bpf"
-	MAX_ENTRIES          = 255
+	LXC_MAP_DEFAULT_PATH = "/sys/fs/bpf/lxc_map"
+	LXC_MAP_NAME         = "lxc_map"
+	MAX_ENTRIES          = 10
+	ETH_ALEN             = 6
 )
 
 // keysize = 4bytes
@@ -18,10 +20,10 @@ type EndpointMapKey struct {
 
 // 4+4+8+8 = 24bytes
 type EndpointMapInfo struct {
-	IfIndex    uint32  // current device's ifindex
+	PodIfIndex uint32  // current device's ifindex
 	LXCIfIndex uint32  // linux container's interface ifindex
-	MAC        [8]byte // MAC string
-	NodeMAC    [8]byte // Node MAC string
+	PodVethMAC [8]byte // MAC string
+	LXCVethMAC [8]byte // Node MAC string
 }
 
 // Create a linux-container-map, for current host
@@ -30,7 +32,7 @@ type EndpointMapInfo struct {
 func CreateLxcMap() (*ebpf.Map, error) {
 	const (
 		pinPath    = LXC_MAP_DEFAULT_PATH
-		name       = "lxc_map"
+		name       = LXC_MAP_NAME
 		_type      = ebpf.Hash
 		keySize    = uint32(unsafe.Sizeof(EndpointMapKey{}))
 		valueSize  = uint32(unsafe.Sizeof(EndpointMapInfo{}))

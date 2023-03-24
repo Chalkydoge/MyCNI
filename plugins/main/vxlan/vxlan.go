@@ -57,7 +57,7 @@ func RandomVethName() (string, error) {
 	}
 
 	// NetworkManager (recent versions) will ignore veth devices that start with "veth"
-	return fmt.Sprintf("veth%x", entropy), nil
+	return fmt.Sprintf("%x", entropy), nil
 }
 
 // Add route records (netinfo, gatewayip, device, scope)
@@ -246,10 +246,9 @@ func setHostVethIntoHost(veth *netlink.Veth, netns ns.NetNS) error {
 
 // set ip addr for vxlan
 func setIPForVxlan(name, ipcidr string) error {
-	deviceType := "vxlan"
 	link, err := netlink.LinkByName(name)
 	if err != nil {
-		return fmt.Errorf("failed to get %s device by name %q, error is: %v", deviceType, name, err)
+		return fmt.Errorf("failed to get device by name %q, error is: %v", name, err)
 	}
 
 	ipaddr, ipnet, err := net.ParseCIDR(ipcidr)
@@ -260,7 +259,7 @@ func setIPForVxlan(name, ipcidr string) error {
 	// ipnet.IP = ipaddr
 	err = netlink.AddrAdd(link, &netlink.Addr{IPNet: ipnet})
 	if err != nil {
-		return fmt.Errorf("can not add the ip %q to %s device %q, error: %v", ipaddr, deviceType, name, err)
+		return fmt.Errorf("can not add the ip %q to device %q, error: %v", ipaddr, name, err)
 	}
 	return nil
 }
@@ -387,8 +386,7 @@ func setARP(gatewayIP, deviceName string, hostNS ns.NetNS, veth *netlink.Veth) e
 		veth = v.(*netlink.Veth)
 		mac := veth.LinkAttrs.HardwareAddr
 		_mac := mac.String()
-
-		return newNS.Do(func(hostNS ns.NetNS) error {
+		return newNS.Do(func(ns.NetNS) error {
 			return CreateARPEntry(gatewayIP, _mac, deviceName)
 		})
 	})
@@ -479,6 +477,7 @@ func setVethPairInfo2LxcMap(hostNS ns.NetNS, podIP string, hostVeth, nsVeth *net
 	}
 
 	podIP = netip.String()
+	key := InetIpToUInt32(podIP)
 
 	hostVethIndex := uint32(hostVeth.Attrs().Index)
 	hostVethMac := stuff8Byte(([]byte)(hostVeth.Attrs().HardwareAddr))
@@ -491,14 +490,14 @@ func setVethPairInfo2LxcMap(hostNS ns.NetNS, podIP string, hostVeth, nsVeth *net
 	}
 
 	return bpfmap.SetLxcMap(
-		bpfmap.EndpointMapKey{},
+		bpfmap.EndpointMapKey{IP: key},
 		bpfmap.EndpointMapInfo{
 			// pod net device index
-			IfIndex: nsVethIndex,
+			PodIfIndex: nsVethIndex,
 			// host device index
 			LXCIfIndex: hostVethIndex,
-			MAC:        nsVethMac,
-			NodeMAC:    hostVethMac,
+			PodVethMAC: nsVethMac,
+			LXCVethMAC: hostVethMac,
 		},
 	)
 }
@@ -647,15 +646,6 @@ func cmdAdd(args *skel.CmdArgs) error {
 		if err != nil {
 			return err
 		}
-
-		// then set arp info for layer 2 traffic
-		// Note: gatewayIP is with /mask here! need to remove!
-		// pureGatewayIP := strings.Split(gatewayIP, "/")
-		err = setARP(gatewayIPString, args.IfName, hostNS, hostPair)
-		if err != nil {
-			return err
-		}
-
 		// then boot host veth end
 		err = hostNS.Do(func(newNS ns.NetNS) error {
 			v, err := netlink.LinkByName(hostPair.Attrs().Name)
@@ -680,7 +670,30 @@ func cmdAdd(args *skel.CmdArgs) error {
 		return nil
 	})
 
-	// attach bpf to host veth tc ingress
+	// Special treatment for get mac address
+	var _mac string
+	err = netns.Do(func(hostNS ns.NetNS) error {
+		err := hostNS.Do(func(ns.NetNS) error {
+			hostVeth, err := netlink.LinkByName(hostPair.Attrs().Name)
+			if err != nil {
+				return err
+			}
+			// here should be inside host
+			hostPair := hostVeth.(*netlink.Veth)
+
+			// check this mac
+			_mac = hostPair.LinkAttrs.HardwareAddr.String()
+			return nil
+		})
+
+		if err != nil {
+			return err
+		}
+		// here is inside pod
+		return CreateARPEntry(gatewayIPString, _mac, args.IfName)
+	})
+
+	// Then we could attach bpf to host veth tc ingress
 	err = attachBPF2Veth(hostPair)
 	if err != nil {
 		return err
@@ -696,6 +709,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 	if err != nil {
 		return err
 	}
+
 	// TODO!
 	// Add vxlan info into BPFMAP/NODE_LOCAL_MAP_DEFAULT_PATH
 	// err = setVxlanInfoToLocalMap(bpfmap, vxlan)
@@ -719,5 +733,9 @@ func cmdAdd(args *skel.CmdArgs) error {
 }
 
 func cmdCheck() error {
+	return nil
+}
+
+func cmdDel() error {
 	return nil
 }

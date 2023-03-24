@@ -4,18 +4,19 @@ import (
 	"mycni/utils"
 
 	"github.com/cilium/ebpf"
+	"github.com/cilium/ebpf/rlimit"
 )
 
 // find bpfmap file by pinPath
-func GetMapByPinnedPath(pinPath string, options ...*ebpf.LoadPinOptions) (*ebpf.Map, error) {
-	var opts *ebpf.LoadPinOptions
-	if len(options) == 0 {
-		opts = &ebpf.LoadPinOptions{}
+func GetMapByPinnedPath(pinPath string, opts ...*ebpf.LoadPinOptions) (*ebpf.Map, error) {
+	var options *ebpf.LoadPinOptions
+	if len(opts) == 0 {
+		options = &ebpf.LoadPinOptions{}
 	} else {
-		opts = options[0]
+		options = opts[0]
 	}
 
-	mp, err := ebpf.LoadPinnedMap(pinPath, opts)
+	mp, err := ebpf.LoadPinnedMap(pinPath, options)
 	if err != nil {
 		return nil, err
 	}
@@ -31,6 +32,9 @@ func createMap(name string, _type ebpf.MapType, keySize, valueSize, maxEntries, 
 		MaxEntries: maxEntries,
 		Flags:      flags,
 	}
+	if err := rlimit.RemoveMemlock(); err != nil {
+		return nil, err
+	}
 
 	mp, err := ebpf.NewMap(&spec)
 	if err != nil {
@@ -39,7 +43,7 @@ func createMap(name string, _type ebpf.MapType, keySize, valueSize, maxEntries, 
 	return mp, nil
 }
 
-// only create a pinned map once, if multiple time called, will not new maps
+// Only create a pinned map once, if multiple time called, will not new maps
 func CreatePinMapOnce(pinPath, name string, _type ebpf.MapType, keySize, valueSize, maxEntries, flags uint32) (*ebpf.Map, error) {
 	if utils.PathExists(pinPath) {
 		return GetMapByPinnedPath(pinPath)
