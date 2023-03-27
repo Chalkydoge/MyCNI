@@ -2,16 +2,16 @@ package main
 
 import (
 	"fmt"
-	"strings"
 	"mycni/etcdwrap"
-	"mycni/plugins/ipam/etcdmode/initpool"
 	"mycni/plugins/ipam/etcdmode/allocator"
+	"mycni/plugins/ipam/etcdmode/initpool"
+	"strings"
 
-	bv "github.com/containernetworking/plugins/pkg/utils/buildversion"
 	"github.com/containernetworking/cni/pkg/skel"
-	"github.com/containernetworking/cni/pkg/version"
 	"github.com/containernetworking/cni/pkg/types"
 	current "github.com/containernetworking/cni/pkg/types/100"
+	"github.com/containernetworking/cni/pkg/version"
+	bv "github.com/containernetworking/plugins/pkg/utils/buildversion"
 )
 
 func main() {
@@ -36,7 +36,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 	if err != nil {
 		return fmt.Errorf("failed to boot etcd client!")
 	}
-	
+
 	// init pool first
 	poolready := cli.GetInitPoolStatus()
 	if poolready == false {
@@ -47,6 +47,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 	}
 
 	ipConf, err := allocator.AllocateIP2Pod(args.ContainerID, args.IfName, cli)
+	ipConf.Interface = current.Int(2) // Assume each pod is init only once, ifindex would always be 2
 	if err != nil {
 		// TODO: Deallocate all already allocated IPs
 		_, _ = allocator.ReleasePodIP(args.ContainerID, args.IfName, cli)
@@ -81,7 +82,7 @@ func cmdDel(args *skel.CmdArgs) error {
 		return fmt.Errorf("Failed to bootup etcd client! Error is %v", err)
 	}
 	// Loop through all ranges, releasing all IPs, even if an error occurs
-	var errors []string	
+	var errors []string
 	_, err = allocator.ReleasePodIP(args.ContainerID, args.IfName, cli)
 	if err != nil {
 		errors = append(errors, err.Error())
@@ -90,6 +91,6 @@ func cmdDel(args *skel.CmdArgs) error {
 	if errors != nil {
 		return fmt.Errorf(strings.Join(errors, ";"))
 	}
-	
+
 	return nil
 }
