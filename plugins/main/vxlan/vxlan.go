@@ -252,10 +252,12 @@ func getContainerVeth(netns ns.NetNS, ifName string) (*netlink.Veth, error) {
 /****************************VXLAN part*****************************/
 
 // create ARP Entry
-func CreateARPEntry(ip, mac, dev string) error {
+func createARPEntry(ip, mac, dev, ns_name string) error {
+	cmd := fmt.Sprintf("ip netns exec %s arp -s %s %s -i %s", ns_name, ip, mac, dev)
+	log.Println(cmd)
 	processInfo := exec.Command(
 		"/bin/sh", "-c",
-		fmt.Sprintf("arp -s %s %s -i %s", ip, mac, dev),
+		cmd,
 	)
 	_, err := processInfo.Output()
 	return err
@@ -272,23 +274,8 @@ func DeleteARPEntry(ip, dev string) error {
 }
 
 // set arp record, gatewayIP & gateway MAC for every pod ns devices
-func setARP(gatewayIP, deviceName string, hostNS ns.NetNS, veth *netlink.Veth) error {
-	err := hostNS.Do(func(newNS ns.NetNS) error {
-		v, err := netlink.LinkByName(veth.Attrs().Name)
-		if err != nil {
-			return err
-		}
-
-		veth = v.(*netlink.Veth)
-		mac := veth.LinkAttrs.HardwareAddr
-		_mac := mac.String()
-		log.Print("Mac addr is ", _mac)
-		return newNS.Do(func(ns.NetNS) error {
-			return CreateARPEntry(gatewayIP, _mac, deviceName)
-		})
-	})
-
-	return err
+func SetARP(gatewayIP, deviceName, mac, nsName string) error {
+	return createARPEntry(gatewayIP, mac, deviceName, nsName)
 }
 
 /*******************BPF MAP***************************/
@@ -452,3 +439,8 @@ func cmdCheck() error {
 func cmdDel() error {
 	return nil
 }
+
+// command used by cilium:
+//  tc filter replace dev [DEV] [ingress/egress] handle 1 bpf da obj [OBJ] sec [SEC]
+//  POD2 veth7214cea6
+// but this could not work when reading eBPF maps?

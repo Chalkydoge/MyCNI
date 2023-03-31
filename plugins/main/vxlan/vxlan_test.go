@@ -92,19 +92,21 @@ func TestCmdAddPod1(t *testing.T) {
 		t.Log(err)
 	}
 
-	if err = setupHostVeth(hostInterface.Name, result); err != nil {
-		t.Log(err)
-	}
+	// if err = setupHostVeth(hostInterface.Name, result); err != nil {
+	// 	t.Log(err)
+	// }
 
-	t.Log(result)
-
+	var tmpMac string
 	for i := 0; i < 5; i++ {
 		hostv, err := netlink.LinkByName(hostInterface.Name)
 		if err != nil {
 			t.Log(err)
 		}
 		t.Logf("Repeat %d/5 times, got mac addr %s", i+1, hostv.Attrs().HardwareAddr.String())
+		tmpMac = hostv.Attrs().HardwareAddr.String()
 	}
+
+	t.Log(result)
 
 	hostv, err := netlink.LinkByName(hostInterface.Name)
 	if err != nil {
@@ -129,6 +131,14 @@ func TestCmdAddPod1(t *testing.T) {
 		t.Log(err)
 	}
 	t.Log(epInfo)
+
+	// Last set arp
+	err = SetARP("10.1.3.1", "eth0", tmpMac, "ns1")
+	if err != nil {
+		t.Log(err.Error())
+	}
+	t.Log("ARP set complete!")
+
 }
 
 func TestCmdAddPod2(t *testing.T) {
@@ -208,16 +218,18 @@ func TestCmdAddPod2(t *testing.T) {
 	if err != nil {
 		t.Log(err)
 	}
-	if err = setupHostVeth(hostInterface.Name, result); err != nil {
-		t.Log(err)
-	}
+	// if err = setupHostVeth(hostInterface.Name, result); err != nil {
+	// 	t.Log(err)
+	// }
 
+	var tmpMac string
 	for i := 0; i < 5; i++ {
 		hostv, err := netlink.LinkByName(hostInterface.Name)
 		if err != nil {
 			t.Log(err)
 		}
 		t.Logf("Repeat %d/5 times, got mac addr %s", i+1, hostv.Attrs().HardwareAddr.String())
+		tmpMac = hostv.Attrs().HardwareAddr.String()
 	}
 
 	t.Log(result)
@@ -245,4 +257,11 @@ func TestCmdAddPod2(t *testing.T) {
 		t.Log(err)
 	}
 	t.Log(epInfo)
+
+	// Last set arp
+	err = SetARP("10.1.3.1", "eth0", tmpMac, "ns2")
+	if err != nil {
+		t.Log(err.Error())
+	}
+	t.Log("ARP set complete!")
 }

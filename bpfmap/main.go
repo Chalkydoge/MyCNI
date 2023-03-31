@@ -20,10 +20,11 @@ type EndpointMapKey struct {
 
 // 4+4+8+8 = 24bytes
 type EndpointMapInfo struct {
-	PodIfIndex uint32  // current device's ifindex
-	LXCIfIndex uint32  // linux container's interface ifindex
-	PodVethMAC [8]byte // MAC string
+	LXCIfIndex uint32 // linux container's interface ifindex
+	PodIfIndex uint32 // current device's ifindex
+
 	LXCVethMAC [8]byte // Node MAC string
+	PodVethMAC [8]byte // MAC string
 }
 
 // Create a linux-container-map, for current host
