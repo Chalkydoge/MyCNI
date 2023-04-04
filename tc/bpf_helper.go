@@ -16,7 +16,7 @@ const (
 )
 
 func GetVethIngressPath() string {
-	return consts.K8S_CNI_PATH + "/veth_ingress.o"
+	return consts.K8S_CNI_PATH + "/veth_ingress.bpf.o"
 }
 
 func GetVxlanIngressPath() string {
@@ -47,6 +47,26 @@ func ExistOnEgress(device string) bool {
 	return strings.Contains(string(o), "direct-action")
 }
 
+// Check whether exists qdisc on current netdev
+func ExistClsact(dev string) bool {
+	processInfo := exec.Command(
+		"/bin/sh", "-c",
+		fmt.Sprintf("tc qdisc show dev %s", dev),
+	)
+	out, _ := processInfo.Output()
+	return strings.Contains(string(out), "clsact")
+}
+
+// Add qdisc (class&act) to netdev's queue
+func AddClsact(device string) error {
+	processInfo := exec.Command(
+		"/bin/sh", "-c",
+		fmt.Sprintf("tc qdisc add dev %s clsact", device),
+	)
+	_, err := processInfo.Output()
+	return err
+}
+
 // Attach program to tc device,
 //
 // supports both ingress and egress
@@ -54,9 +74,9 @@ func AttachBPF2Device(device, prog string, dir BPF_TC_DIRECT) error {
 	var cmd string
 	switch dir {
 	case INGRESS:
-		cmd = fmt.Sprintf("tc filter add dev %s ingress bpf direct-action obj %s", device, prog)
+		cmd = fmt.Sprintf("tc filter replace dev %s ingress handle 0x1 bpf da obj %s", device, prog)
 	case EGRESS:
-		cmd = fmt.Sprintf("tc filter add dev %s egress bpf direct-action obj %s", device, prog)
+		cmd = fmt.Sprintf("tc filter replace dev %s egress handle 0x1 bpf da obj %s", device, prog)
 	}
 
 	p := exec.Command("/bin/sh", "-c", cmd)
@@ -66,6 +86,13 @@ func AttachBPF2Device(device, prog string, dir BPF_TC_DIRECT) error {
 
 // tc entry
 func AttachBPF2TC(device, prog string, direct BPF_TC_DIRECT) error {
+	if !ExistClsact(device) {
+		err := AddClsact(device)
+		if err != nil {
+			return err
+		}
+	}
+
 	switch direct {
 	case INGRESS:
 		if ExistOnIngress(device) {

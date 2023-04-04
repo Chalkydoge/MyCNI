@@ -9,6 +9,7 @@ import (
 	"mycni/pkg/ip"
 	"mycni/pkg/ipam"
 	"mycni/tc"
+	"mycni/utils"
 	"os"
 	"runtime"
 	"time"
@@ -388,7 +389,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 	// need ipam?
 	isLayer3 := (n.IPAM.Type != "")
 	if isLayer3 {
-		log.Print("Start to exec ipam...(ip address is automatically recycled!)")
+		utils.Log("Start to exec ipam...(ip address is automatically recycled!)")
 		r, err := ipam.ExecAdd(n.IPAM.Type, args.StdinData)
 		if err != nil {
 			return err
@@ -404,14 +405,17 @@ func cmdAdd(args *skel.CmdArgs) error {
 
 		// Configure the container hardware address and IP address(es)
 		result.IPs = ipamRes.IPs
-		log.Print("IPAM result is", ipamRes)
 	}
-
-	log.Print("IPAM end")
+	utils.Log("IPAM plugin success.")
 
 	if len(result.IPs) == 0 {
 		return errors.New("IPAM plugin returned missing IP config")
 	}
+
+	// get res from IPAM plugin
+	ipConf := result.IPs[0]
+	allocatedIPCIDR := ipConf.Address.String()
+	gwIP := ipConf.Gateway.String()
 
 	// setup netns
 	netns, err := ns.GetNS(args.Netns)
@@ -420,12 +424,47 @@ func cmdAdd(args *skel.CmdArgs) error {
 	}
 	defer netns.Close()
 
-	hostInterface, _, err := setupContainerVeth(netns, args.IfName, 1450, result)
+	hostInterface, containerInterface, err := setupContainerVeth(netns, args.IfName, 1450, result)
 	if err != nil {
 		return err
 	}
 
-	if err = setupHostVeth(hostInterface.Name, result); err != nil {
+	var tmpMac string
+	for i := 0; i < 5; i++ {
+		hostv, err := netlink.LinkByName(hostInterface.Name)
+		if err != nil {
+			return err
+		}
+		utils.Log(fmt.Sprintf("Repeat %d/5 times, got mac addr %s", i+1, hostv.Attrs().HardwareAddr.String()))
+		tmpMac = hostv.Attrs().HardwareAddr.String()
+	}
+
+	// Re-fetch newly built veth device
+	hostv, err := netlink.LinkByName(hostInterface.Name)
+	if err != nil {
+		return err
+	}
+	podv, err := getContainerVeth(netns, containerInterface.Name)
+	if err != nil {
+		return err
+	}
+
+	// Then write mac-ip mapping into bpf map
+	setVethPairInfo2LxcMap(allocatedIPCIDR, hostv.(*netlink.Veth), podv)
+
+	// Last set arp
+
+	// Get the last item(ns name) from given path
+	tmp := strings.Split(args.Netns, "/")
+	err = SetARP(gwIP, args.IfName, tmpMac, tmp[len(tmp)-1])
+	if err != nil {
+		return err
+	}
+	utils.Log("ARP set complete!")
+
+	// Finally attach bpf to tc ingress
+	err = attachBPF2Veth(hostv.(*netlink.Veth))
+	if err != nil {
 		return err
 	}
 
@@ -436,11 +475,51 @@ func cmdCheck() error {
 	return nil
 }
 
-func cmdDel() error {
-	return nil
+func cmdDel(args *skel.CmdArgs) error {
+	conf := NetConf{}
+	if err := json.Unmarshal(args.StdinData, &conf); err != nil {
+		return fmt.Errorf("failed to load netconf: %v", err)
+	}
+
+	// Find pod ip with net conf
+	podIP := "Please find inside etcd!"
+
+	// Then, ipam exec del
+	if err := ipam.ExecDel(conf.IPAM.Type, args.StdinData); err != nil {
+		return err
+	}
+
+	if args.Netns == "" {
+		return nil
+	}
+
+	// There is a netns so try to clean up. Delete can be called multiple times
+	// so don't return an error if the device is already removed.
+	var ipnets []*net.IPNet
+	err := ns.WithNetNSPath(args.Netns, func(_ ns.NetNS) error {
+		var err error
+		ipnets, err = ip.DelLinkByNameAddr(args.IfName)
+		if err != nil && err == ip.ErrLinkNotFound {
+			return nil
+		}
+		return err
+	})
+
+	// If there exists any ip net => return err
+	if len(ipnets) != 0 {
+		return err
+	}
+
+	// Then del bpf map entry
+
+	// IP from plugin captured result
+	// Remove entry by this IP
+	err = bpfmap.DelKeyLxcMap(bpfmap.EndpointMapKey{
+		IP: InetIpToUInt32(podIP),
+	})
+	return err
 }
 
 // command used by cilium:
-//  tc filter replace dev [DEV] [ingress/egress] handle 1 bpf da obj [OBJ] sec [SEC]
-//  POD2 veth7214cea6
+// tc filter replace dev [DEV] [ingress/egress] handle 1 bpf da obj [OBJ] sec [SEC]
 // but this could not work when reading eBPF maps?

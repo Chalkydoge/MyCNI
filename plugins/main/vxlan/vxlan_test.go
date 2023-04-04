@@ -3,6 +3,7 @@ package vxlan
 import (
 	"fmt"
 	"mycni/bpfmap"
+	"mycni/pkg/testutils"
 	"net"
 	"testing"
 
@@ -264,4 +265,35 @@ func TestCmdAddPod2(t *testing.T) {
 		t.Log(err.Error())
 	}
 	t.Log("ARP set complete!")
+}
+
+func TestIPAMDelegate(t *testing.T) {
+	conf := fmt.Sprintf(`{
+		"cniVersion": "%s",
+		"name": "mynet",
+		"type": "vxlan",
+		"ipam": {
+			"type": "etcdmode"
+		}
+	}`, "1.0.0")
+
+	args := &skel.CmdArgs{
+		ContainerID: "308102901b7fe9538fcfc71669d505bc09f9def5eb05adeddb73a948bb4b2c8b",
+		Netns:       "/var/run/netns/ns1",
+		IfName:      "eth0",
+		Args:        "K8S_POD_NAMESPACE=test_only;K8S_POD_NAME=foobar-c676cc86f-4kz2t",
+		Path:        "/home/ubuntu/go/src/mycni/bin",
+		StdinData:   []byte(conf),
+	}
+	_, _, err := testutils.CmdAddWithArgs(args, func() error {
+		return cmdAdd(args)
+	})
+
+	if err != nil {
+		t.Log(err)
+	}
+}
+
+func TestBPFAttach(t *testing.T) {
+
 }

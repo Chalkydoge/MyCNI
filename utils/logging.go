@@ -2,18 +2,18 @@ package utils
 
 import (
 	"bufio"
-	"os"
 	"fmt"
+	"os"
 )
 
 // For logging only
 const (
-	DEFAULT_LOG_PATH = "~/workspace/src/mycni/mycni.log"
+	DEFAULT_LOG_PATH = "/home/ubuntu/go/src/mycni/mycni.log"
 )
 
 // Only do logging
 func Log(log ...string) {
-	file, err := os.OpenFile(DEFAULT_LOG_PATH, os.O_WRONLY | os.O_APPEND, 0666)
+	file, err := os.OpenFile(DEFAULT_LOG_PATH, os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		os.Create(DEFAULT_LOG_PATH)
 	}
