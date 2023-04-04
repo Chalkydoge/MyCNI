@@ -7,7 +7,8 @@ import (
 )
 
 const (
-	LXC_MAP_DEFAULT_PATH = "/sys/fs/bpf/lxc_map"
+	// change the path to tc global(because bpf program is attached to `tc`)
+	LXC_MAP_DEFAULT_PATH = "/sys/fs/bpf/tc/globals/lxc_map"
 	LXC_MAP_NAME         = "lxc_map"
 	MAX_ENTRIES          = 10
 	ETH_ALEN             = 6
