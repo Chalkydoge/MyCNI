@@ -1,0 +1,16 @@
+IPAM plugin success. 
+Start to exec ipam...(ip address is automatically recycled!) 
+IPAM plugin success. 
+Repeat 1/5 times, got mac addr 5e:ff:cb:a5:c4:be 
+Repeat 2/5 times, got mac addr 5e:ff:cb:a5:c4:be 
+Repeat 3/5 times, got mac addr 5e:ff:cb:a5:c4:be 
+Repeat 4/5 times, got mac addr 5e:ff:cb:a5:c4:be 
+Repeat 5/5 times, got mac addr 5e:ff:cb:a5:c4:be 
+Start to exec ipam...(ip address is automatically recycled!) 
+IPAM plugin success. 
+Repeat 1/5 times, got mac addr e6:95:54:f7:d9:c0 
+Repeat 2/5 times, got mac addr e6:95:54:f7:d9:c0 
+Repeat 3/5 times, got mac addr e6:95:54:f7:d9:c0 
+Repeat 4/5 times, got mac addr e6:95:54:f7:d9:c0 
+Repeat 5/5 times, got mac addr e6:95:54:f7:d9:c0 
+ARP set complete! 

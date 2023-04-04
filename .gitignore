@@ -1,2 +1,4 @@
 *.yaml
 *.sh
+mycni.log
+.gitignore
