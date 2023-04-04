@@ -1,3 +1,4 @@
+/bin
 *.yaml
 *.sh
 mycni.log
