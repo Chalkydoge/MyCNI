@@ -293,7 +293,3 @@ func TestIPAMDelegate(t *testing.T) {
 		t.Log(err)
 	}
 }
-
-func TestBPFAttach(t *testing.T) {
-
-}

@@ -11,3 +11,22 @@
 1. Reducing transfering datapath by equipping netdev with eBPF program(redirect_peer or redirect_neigh).
 
 
+## Demo Test
+
+1. Add these conf into `/etc/cni/net.d/` like this below:
+```js
+{
+  "cniVersion": "1.0.0",
+  "name": "mycni",
+  "type": "vxlan",
+  "mode": "vxlan",
+}
+```
+
+2. Run `make build` at the root directory of this project.
+
+3. A binary file called `mycni` would be generated.
+
+4. Copy the binary `mycni` to directory `/opt/cni/bin`
+
+5. Then this CNI plugin should work.

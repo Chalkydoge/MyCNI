@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"mycni/bpfmap"
 	"mycni/pkg/ip"
 	"mycni/pkg/ipam"
@@ -115,7 +114,8 @@ func setupContainerVeth(netns ns.NetNS, ifName string, mtu int, pr *current.Resu
 		hostInterface.Mac = hostVeth.HardwareAddr.String()
 		containerInterface.Name = contVeth0.Name
 		containerInterface.Mac = contVeth0.HardwareAddr.String()
-		log.Print("host veth mac is ", hostInterface.Mac)
+
+		utils.Log("host veth mac is " + hostInterface.Mac)
 
 		containerInterface.Sandbox = netns.Path()
 		pr.Interfaces = []*current.Interface{hostInterface, containerInterface}
@@ -255,7 +255,7 @@ func getContainerVeth(netns ns.NetNS, ifName string) (*netlink.Veth, error) {
 // create ARP Entry
 func createARPEntry(ip, mac, dev, ns_name string) error {
 	cmd := fmt.Sprintf("ip netns exec %s arp -s %s %s -i %s", ns_name, ip, mac, dev)
-	log.Println(cmd)
+	utils.Log(cmd)
 	processInfo := exec.Command(
 		"/bin/sh", "-c",
 		cmd,
@@ -316,8 +316,6 @@ func setVethPairInfo2LxcMap(podIP string, hostVeth, nsVeth *netlink.Veth) error 
 
 	podIP = netip.String()
 	key := InetIpToUInt32(podIP)
-	log.Println(hostVeth.Attrs().Index)
-	log.Println(nsVeth.Attrs().Index)
 
 	hostVethIndex := uint32(hostVeth.Attrs().Index)
 	hostVethMac := stuff8Byte(([]byte)(hostVeth.Attrs().HardwareAddr))

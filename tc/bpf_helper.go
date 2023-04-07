@@ -71,6 +71,14 @@ func AddClsact(device string) error {
 //
 // supports both ingress and egress
 func AttachBPF2Device(device, prog string, dir BPF_TC_DIRECT) error {
+	// If no clsact has been set up, first add qdisc
+	if !ExistClsact(device) {
+		err := AddClsact(device)
+		if err != nil {
+			return err
+		}
+	}
+
 	var cmd string
 	switch dir {
 	case INGRESS:
