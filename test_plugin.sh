@@ -24,10 +24,15 @@ if [ -f "/opt/cni/bin/vxlan" ];then
     rm /opt/cni/bin/vxlan
 fi
 
+if [ -f "/opt/cni/bin/veth_ingress.bpf.o" ];then
+    rm /opt/cni/bin/veth_ingress.bpf.o
+fi
+
 cd bin
 
 cp etcdmode /opt/cni/bin
 cp vxlan /opt/cni/bin
+cp veth_ingress.bpf.o /opt/cni/bin
 
 # This will test whether IP allocator works?
 # go test -v -run TestAllocateIP2Pod

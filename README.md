@@ -80,3 +80,22 @@ Apr 10 11:00:24 master kubelet[642]: E0410 11:00:24.552193     642 kuberuntime_s
 Apr 10 11:00:24 master kubelet[642]: E0410 11:00:24.552725     642 generic.go:236] "GenericPLEG: Unable to retrieve pods" err="rpc error: code = Unavailable desc = connection error: desc = \"transport: Error while dialing dial unix /var/run/containerd/containerd.sock: connect: connection refused\""
 Apr 10 11:00:25 master kubelet[642]: E0410 11:00:25.027308     642 remote_runtime.go:277] "ListPodSandbox with filter from runtime service failed" err="rpc error: code = Unavailable desc = connection error: desc = \"transport: Error while dialing dial unix /var/run/containerd/containerd.sock: connect: connection refused\"" filter="&PodSandboxFilter{Id:,State:&PodSandboxStateValue{State:SANDBOX_READY,},LabelSelector:map[string]string{},}"
 ```
+
+
+Apr 10 16:14:50 master kubelet[12039]: E0410 16:14:50.904799   12039 kuberuntime_sandbox.go:300] "Failed to list pod sandboxes" err="rpc error: code = Unavailable desc = connection error: desc = \"transport: Error while dialing dial unix /var/run/containerd/containerd.sock: connect: connection refused\""
+Apr 10 16:14:50 master kubelet[12039]: E0410 16:14:50.904832   12039 generic.go:236] "GenericPLEG: Unable to retrieve pods" err="rpc error: code = Unavailable desc = connection error: desc = \"transport: Error while dialing dial unix /var/run/containerd/containerd.sock: connect: connection refused\""
+Apr 10 16:14:51 master kubelet[12039]: W0410 16:14:51.906145   12039 logging.go:59] [core] [Channel #1 SubChannel #2] grpc: addrConn.createTransport failed to connect to {
+Apr 10 16:14:51 master kubelet[12039]:   "Addr": "/var/run/containerd/containerd.sock",
+Apr 10 16:14:51 master kubelet[12039]:   "ServerName": "/var/run/containerd/containerd.sock",
+Apr 10 16:14:51 master kubelet[12039]:   "Attributes": null,
+Apr 10 16:14:51 master kubelet[12039]:   "BalancerAttributes": null,
+Apr 10 16:14:51 master kubelet[12039]:   "Type": 0,
+Apr 10 16:14:51 master kubelet[12039]:   "Metadata": null
+Apr 10 16:14:51 master kubelet[12039]: }. Err: connection error: desc = "transport: Error while dialing dial unix /var/run/containerd/containerd.sock: connect: connection refused"
+Apr 10 16:14:51 master kubelet[12039]: E0410 16:14:51.906859   12039 remote_runtime.go:277] "ListPodSandbox with filter from runtime service failed" err="rpc error: code = Unavailable desc = connection error: desc = \"transport: Error while dialing dial unix /var/run/containerd/containerd.sock: connect: connection refused\"" filter="&PodSandboxFilter{Id:,State:&PodSandboxStateValue{State:SANDBOX_READY,},LabelSelector:map[string]string{},}"
+Apr 10 16:14:51 master kubelet[12039]: E0410 16:14:51.907017   12039 kuberuntime_sandbox.go:300] "Failed to list pod sandboxes" err="rpc error: code = Unavailable desc = connection error: desc = \"transport: Error while dialing dial unix /var/run/containerd/containerd.sock: connect: connection refused\""
+Apr 10 16:14:51 master kubelet[12039]: E0410 16:14:51.907145   12039 kubelet_pods.go:1138] "Error listing containers" err="rpc error: code = Unavailable desc = connection error: desc = \"transport: Error while dialing dial unix /var/run/containerd/containerd.sock: connect: connection refused\""
+Apr 10 16:14:51 master kubelet[12039]: E0410 16:14:51.907321   12039 kubelet.go:2283] "Failed cleaning pods" err="rpc error: code = Unavailable desc = connection error: desc = \"transport: Error while dialing dial unix /var/run/containerd/containerd.sock: connect: connection refused\""
+Apr 10 16:14:51 master kubelet[12039]: E0410 16:14:51.907496   12039 remote_runtime.go:277] "ListPodSandbox with filter from runtime service failed" err="rpc error: code = Unavailable desc = connection error: desc = \"transport: Error while dialing dial unix /var/run/containerd/containerd.sock: connect: connection refused\"" filter="nil"
+Apr 10 16:14:51 master kubelet[12039]: E0410 16:14:51.907622   12039 kuberuntime_sandbox.go:300] "Failed to list pod sandboxes" err="rpc error: code = Unavailable desc = connection error: desc = \"transport: Error while dialing dial unix /var/run/containerd/containerd.sock: connect: connection refused\""
+Apr 10 16:14:51 master kubelet[12039]: E0410 16:14:51.907746   12039 generic.go:236] "GenericPLEG: Unable to retrieve pods" err="rpc error: code = Unavailable desc = connection error: desc = \"transport: Error while dialing dial unix /var/run/containerd/containerd.sock: connect: connection refused\""
