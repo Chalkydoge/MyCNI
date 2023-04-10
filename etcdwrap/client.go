@@ -1,13 +1,14 @@
 package etcdwrap
 
 import (
-	"fmt"
-	"time"
 	"context"
+	"fmt"
 	"mycni/consts"
 	"mycni/utils"
-	"go.etcd.io/etcd/pkg/transport"
+	"time"
+
 	clientv3 "go.etcd.io/etcd/client/v3"
+	"go.etcd.io/etcd/pkg/transport"
 )
 
 const (
@@ -15,8 +16,8 @@ const (
 )
 
 type WrappedClient struct {
-	client 			*clientv3.Client
-	poolInitStatus 	bool
+	client         *clientv3.Client
+	poolInitStatus bool
 }
 
 var __innerGetEtcdClient func() (*WrappedClient, error)
@@ -35,32 +36,31 @@ func _innerGetEtcdClient() func() (*WrappedClient, error) {
 		if _cli != nil {
 			return _cli, nil
 		} else {
-			tlsInfo := transport.TLSInfo {
-				CertFile: consts.K8S_CERT_FILEPATH,
-				KeyFile: consts.K8S_KEY_FILEPATH,
+			tlsInfo := transport.TLSInfo{
+				CertFile:      consts.K8S_CERT_FILEPATH,
+				KeyFile:       consts.K8S_KEY_FILEPATH,
 				TrustedCAFile: consts.K8S_CA_FILEPATH,
 			}
-			
+
 			tlsConfig, err := tlsInfo.ClientConfig()
 
 			cli, err := clientv3.New(clientv3.Config{
-				Endpoints: []string{"127.0.0.1:2379", "10.128.47.22:2379"},
+				Endpoints:   []string{"127.0.0.1:2379", "10.128.47.22:2379"},
 				DialTimeout: sampleTimeout,
-				TLS: tlsConfig,
+				TLS:         tlsConfig,
 			})
-		
+
 			if err != nil {
 				// handle error
-				fmt.Errorf("Failed to connected etcd server, message: %w", err)
-				return nil, err
+				return nil, fmt.Errorf("Failed to connected etcd server, message: %w", err)
 			}
 
-			_cli = &WrappedClient {
-				client: cli,
+			_cli = &WrappedClient{
+				client:         cli,
 				poolInitStatus: false,
 			}
 
-			return _cli, nil			
+			return _cli, nil
 		}
 	}
 }
@@ -71,7 +71,7 @@ func Init() {
 	}
 }
 
-func (cli *WrappedClient)CloseEtcdClient() {
+func (cli *WrappedClient) CloseEtcdClient() {
 	cli.client.Close()
 }
 
@@ -84,7 +84,7 @@ func (cli *WrappedClient) GetKV(key string) (string, error) {
 
 	if len(resp.Kvs) > 0 {
 		// return last item's first value
-		return string(resp.Kvs[len(resp.Kvs) - 1: ][0].Value), nil
+		return string(resp.Kvs[len(resp.Kvs)-1:][0].Value), nil
 	}
 	return "", nil
 }

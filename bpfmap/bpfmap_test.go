@@ -1,6 +1,8 @@
 package bpfmap
 
 import (
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -42,4 +44,59 @@ func TestCreateLXCMap(t *testing.T) {
 
 	// err = mp.Delete(EndpointMapKey{IP: 2})
 	// test.Nil(err)
+}
+
+func InetIpToUInt32(ip string) uint32 {
+	bits := strings.Split(ip, ".")
+	b0, _ := strconv.Atoi(bits[0])
+	b1, _ := strconv.Atoi(bits[1])
+	b2, _ := strconv.Atoi(bits[2])
+	b3, _ := strconv.Atoi(bits[3])
+	var sum uint32
+	sum += uint32(b0) << 24
+	sum += uint32(b1) << 16
+	sum += uint32(b2) << 8
+	sum += uint32(b3)
+	return sum
+}
+
+func TestLookup(t *testing.T) {
+	mp, err := CreateLxcMap()
+	if err != nil {
+		t.Log(err)
+	}
+
+	epInfo := &EndpointMapInfo{}
+	err = mp.Lookup(EndpointMapKey{IP: InetIpToUInt32("10.1.2.12")}, epInfo)
+	if err != nil {
+		t.Log(err)
+	}
+	t.Log(epInfo)
+}
+
+func TestResetMap(t *testing.T) {
+	code, err := ResetLxcMap()
+	if err != nil {
+		t.Log(err)
+	}
+	if code < 0 {
+		t.Log("Error happened while deleting keys!")
+	}
+}
+
+func TestIterate(t *testing.T) {
+	mp, err := CreateLxcMap()
+	if err != nil {
+		t.Log(err)
+	}
+
+	iter := mp.Iterate()
+	keys := []EndpointMapKey{}
+	var key EndpointMapKey
+	var value EndpointMapInfo
+
+	for iter.Next(&key, &value) {
+		keys = append(keys, key)
+	}
+	t.Log(keys)
 }

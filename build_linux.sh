@@ -9,7 +9,7 @@ fi
 echo ${PWD}
 
 echo "Building plugins ${GOOS}"
-PLUGINS="plugins/main/* plugins/ipam/*"
+PLUGINS="plugins/ipam/* plugins/main/*"
 for d in $PLUGINS; do
 	if [ -d "$d" ]; then
 		plugin="$(basename "$d")"

@@ -5,6 +5,7 @@ import (
 	"mycni/etcdwrap"
 	"mycni/plugins/ipam/etcdmode/allocator"
 	"mycni/plugins/ipam/etcdmode/initpool"
+	"runtime"
 	"strings"
 
 	"github.com/containernetworking/cni/pkg/skel"
@@ -13,6 +14,10 @@ import (
 	"github.com/containernetworking/cni/pkg/version"
 	bv "github.com/containernetworking/plugins/pkg/utils/buildversion"
 )
+
+func init() {
+	runtime.LockOSThread()
+}
 
 func main() {
 	skel.PluginMain(cmdAdd, cmdCheck, cmdDel, version.All, bv.BuildString("etcdmode"))
@@ -65,6 +70,7 @@ func cmdCheck(args *skel.CmdArgs) error {
 	}
 
 	// See if the container has been properly allocated with ip
+	etcdwrap.Init()
 	cli, err := etcdwrap.GetEtcdClient()
 	if err != nil {
 		return fmt.Errorf("Failed to bootup etcd client! Error is %v", err)
@@ -77,6 +83,7 @@ func cmdCheck(args *skel.CmdArgs) error {
 }
 
 func cmdDel(args *skel.CmdArgs) error {
+	etcdwrap.Init()
 	cli, err := etcdwrap.GetEtcdClient()
 	if err != nil {
 		return fmt.Errorf("Failed to bootup etcd client! Error is %v", err)

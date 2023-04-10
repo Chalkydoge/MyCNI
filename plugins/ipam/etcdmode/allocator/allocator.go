@@ -7,6 +7,7 @@ import (
 
 	"mycni/etcdwrap"
 	"mycni/utils"
+
 	current "github.com/containernetworking/cni/pkg/types/100"
 )
 
@@ -23,7 +24,7 @@ func GetOneIPFromPool(poolKey string, cli *etcdwrap.WrappedClient) (string, erro
 	ans := ippool[0]
 
 	// update new pool
-	err = cli.PutKV(poolKey, utils.ConvertArray2String(ippool[1: ]))
+	err = cli.PutKV(poolKey, utils.ConvertArray2String(ippool[1:]))
 	if err != nil {
 		return ans, err
 	}
@@ -37,17 +38,19 @@ func AllocateIP2Host(cli *etcdwrap.WrappedClient) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Error when getting host ip! err is %v", err)
 	}
+	utils.Log("Host has an IP address " + hostip)
 	if hostip != "" {
 		return hostip, nil
 	}
 
 	// 1. fetch an ip cidr from ip pool
 	ip, err := GetOneIPFromPool(utils.GetIPPoolPath(), cli)
+	utils.Log("Fetched IP " + ip)
 	if err != nil {
 		return "", fmt.Errorf("Cannot get ip from ip pool, msg: %v", err)
 	}
 
-	// 2. write into etcd 
+	// 2. write into etcd
 	// mycni/ipam/<hostname> = ip, means that host has been allocated
 	err = cli.PutKV(utils.GetHostPath(), ip)
 	if err != nil {
@@ -61,7 +64,7 @@ func AllocateIP2Host(cli *etcdwrap.WrappedClient) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Cannot assign gateway! Error is: %v", err)
 	}
-	
+
 	// 4. last, setup host's local ip pool, put the string in
 	var ips []string
 	hostPoolPath := utils.GetHostIPPoolPath()
@@ -69,8 +72,8 @@ func AllocateIP2Host(cli *etcdwrap.WrappedClient) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Get valid ips failed! err is %v", err)
 	}
-	
-	cli.PutKV(hostPoolPath,	utils.ConvertArray2String(ips))
+
+	cli.PutKV(hostPoolPath, utils.ConvertArray2String(ips))
 	return ip, nil
 }
 
@@ -140,21 +143,22 @@ func AllocateIP2Pod(containerID, ifname string, cli *etcdwrap.WrappedClient) (*c
 
 	// now check container
 	id := containerID + "-" + ifname
+	utils.Log("Trying to allocated IP for pod " + id)
 	allocatedIP, err = cli.GetKV(utils.GetNetDevicePath(id))
 	if err != nil {
 		return nil, fmt.Errorf("Cannot get current network device! err is %v", err)
 	}
-	
+
 	// Already allocated
 	if allocatedIP != "" {
 		allocatedIPAddr, _, err := net.ParseCIDR(allocatedIP) // allocated for device
 		if err != nil {
 			return nil, fmt.Errorf("Invalid ip cidr in allocated ip for container %s", id)
 		}
-		
+
 		reservedIP = &net.IPNet{IP: allocatedIPAddr, Mask: hostsubnet.Mask}
 
-		return &current.IPConfig {
+		return &current.IPConfig{
 			Address: *reservedIP,
 			Gateway: gw,
 		}, nil
@@ -163,6 +167,7 @@ func AllocateIP2Pod(containerID, ifname string, cli *etcdwrap.WrappedClient) (*c
 	// Not allocated, now we allocate one IP for it
 	var hostIPPool string
 	hostIPPool, err = cli.GetKV(utils.GetHostIPPoolPath())
+	utils.Log("Current hostIP pool is like: " + hostIPPool)
 	ips := strings.Split(hostIPPool, ";")
 	if len(ips) <= 0 {
 		return nil, fmt.Errorf("All ip address has been used under this host!")
@@ -171,13 +176,14 @@ func AllocateIP2Pod(containerID, ifname string, cli *etcdwrap.WrappedClient) (*c
 	// convert into ip.Net object
 	newIp, _, err = net.ParseCIDR(ips[0]) // allocate for device
 	// Then put it back
-	cli.PutKV(utils.GetHostIPPoolPath(), utils.ConvertArray2String(ips[1: ]))
+	cli.PutKV(utils.GetHostIPPoolPath(), utils.ConvertArray2String(ips[1:]))
 
 	reservedIP = &net.IPNet{IP: newIp, Mask: hostsubnet.Mask}
+
 	// Address: net.IPNet
 	// Gateway: net.IP
 	// allocate ip for containerid + ifname
-	ipconf := &current.IPConfig {
+	ipconf := &current.IPConfig{
 		Address: *reservedIP,
 		Gateway: gw,
 	}
@@ -200,6 +206,7 @@ func ReleasePodIP(containerID, ifname string, cli *etcdwrap.WrappedClient) (bool
 	}
 
 	// so if allocated ip is empty, do nothing
+	utils.Log("Release is ok till here")
 	if allocatedIP == "" {
 		return true, nil
 	}
@@ -208,9 +215,9 @@ func ReleasePodIP(containerID, ifname string, cli *etcdwrap.WrappedClient) (bool
 	var hostIPPool string
 	hostIPPool, err = cli.GetKV(utils.GetHostIPPoolPath())
 	ips := strings.Split(hostIPPool, ";")
-	// Then put it back	
+	// Then put it back
 	ips = append(ips, allocatedIP)
-	
+
 	// update back to hostpool
 	cli.PutKV(utils.GetHostIPPoolPath(), utils.ConvertArray2String(ips))
 
@@ -232,7 +239,7 @@ func ReleaseHostGateway(cli *etcdwrap.WrappedClient) (bool, error) {
 }
 
 // Find assigned ip with given info
-func FindByID(containerID, ifname string, cli *etcdwrap.WrappedClient) (bool,error) {
+func FindByID(containerID, ifname string, cli *etcdwrap.WrappedClient) (bool, error) {
 	id := containerID + "-" + ifname
 	res, err := cli.GetKV(utils.GetNetDevicePath(id))
 	if err != nil {
@@ -242,4 +249,19 @@ func FindByID(containerID, ifname string, cli *etcdwrap.WrappedClient) (bool,err
 		return false, nil
 	}
 	return true, nil
+}
+
+// Find assigned ip with given info
+func FindIPByID(containerID, ifname string, cli *etcdwrap.WrappedClient) (string, error) {
+	id := containerID + "-" + ifname
+	utils.Log(id)
+
+	res, err := cli.GetKV(utils.GetNetDevicePath(id))
+	if err != nil {
+		return "", fmt.Errorf("Error when get container info with id %s, %v", id, err)
+	}
+	if res == "" {
+		return "", nil
+	}
+	return res, nil
 }

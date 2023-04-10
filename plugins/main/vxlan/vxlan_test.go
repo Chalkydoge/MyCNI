@@ -1,4 +1,4 @@
-package vxlan
+package main
 
 import (
 	"fmt"
@@ -30,7 +30,7 @@ func TestCmdAddPod1(t *testing.T) {
 		ContainerID: "308102901b7fe9538fcfc71669d505bc09f9def5eb05adeddb73a948bb4b2c8b",
 		Netns:       "/var/run/netns/ns1",
 		IfName:      "eth0",
-		Args:        "K8S_POD_NAMESPACE=kube-system;K8S_POD_NAME=coredns-c676cc86f-4kz2t",
+		Args:        "K8S_POD_NAMESPACE=kube-system;K8S_POD_NAME=coredns-5bbd96d687-ggchs",
 		Path:        "/opt/cni/bin",
 		StdinData:   []byte(conf),
 	}
@@ -93,10 +93,6 @@ func TestCmdAddPod1(t *testing.T) {
 		t.Log(err)
 	}
 
-	// if err = setupHostVeth(hostInterface.Name, result); err != nil {
-	// 	t.Log(err)
-	// }
-
 	var tmpMac string
 	for i := 0; i < 5; i++ {
 		hostv, err := netlink.LinkByName(hostInterface.Name)
@@ -121,6 +117,9 @@ func TestCmdAddPod1(t *testing.T) {
 	setVethPairInfo2LxcMap("10.1.3.2/28", hostv.(*netlink.Veth), podv)
 	t.Log("BPF Map for pod1 complete!")
 
+	setPodIP2PodMap(n.podname, "10.1.3.2/28")
+	t.Log("Write pod-ip mapping complete!")
+
 	mp, err := bpfmap.CreateLxcMap()
 	if err != nil {
 		t.Log(err)
@@ -132,6 +131,12 @@ func TestCmdAddPod1(t *testing.T) {
 		t.Log(err)
 	}
 	t.Log(epInfo)
+
+	writtenIP, err := loadPodIP(n.podname)
+	if err != nil {
+		t.Log(err)
+	}
+	t.Logf("Recorded mapping of pod name %s to ip address %s", n.podname, writtenIP)
 
 	// Last set arp
 	err = SetARP("10.1.3.1", "eth0", tmpMac, "ns1")
@@ -292,4 +297,40 @@ func TestIPAMDelegate(t *testing.T) {
 	if err != nil {
 		t.Log(err)
 	}
+}
+
+func TestCmdDel(t *testing.T) {
+	conf := fmt.Sprintf(`{
+		"cniVersion": "%s",
+		"name": "mynet",
+		"type": "vxlan",
+		"ipam": {
+			"type": "etcdmode"
+		}
+	}`, "1.0.0")
+
+	args := &skel.CmdArgs{
+		ContainerID: "308102901b7fe9538fcfc71669d505bc09f9def5eb05adeddb73a948bb4b2c8b",
+		Netns:       "/var/run/netns/cni-1f93fba0-6523-6202-35b7-698943074dce",
+		IfName:      "eth0",
+		Args:        "K8S_POD_NAMESPACE=kube-system;K8S_POD_NAME=coredns-5bbd96d687-ggchs",
+		Path:        "/home/ubuntu/go/src/mycni/bin",
+		StdinData:   []byte(conf),
+	}
+
+	err := testutils.CmdDelWithArgs(args, func() error {
+		return cmdDel(args)
+	})
+	if err != nil {
+		t.Log(err)
+	}
+}
+
+func TestParsing(t *testing.T) {
+	ips := "10.1.0.11"
+	tmp := InetIpToUInt32(ips)
+	t.Logf("uint32 of ip %s is %d", ips, tmp)
+
+	tmp_ip := UInt32ToInetIP(tmp)
+	t.Logf("re-parsing ip is %s", tmp_ip)
 }
