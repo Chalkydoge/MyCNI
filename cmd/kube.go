@@ -90,3 +90,4 @@ func newKubeSubnetManager(ctx context.Context, c clientset.Interface) (*kubeSubn
 	ksm.nodeController = controller
 	ksm.nodeStore = listers.NewNodeLister(indexer)
 }
+fooooooooooooooo
