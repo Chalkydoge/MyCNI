@@ -99,3 +99,10 @@ Apr 10 16:14:51 master kubelet[12039]: E0410 16:14:51.907321   12039 kubelet.go:
 Apr 10 16:14:51 master kubelet[12039]: E0410 16:14:51.907496   12039 remote_runtime.go:277] "ListPodSandbox with filter from runtime service failed" err="rpc error: code = Unavailable desc = connection error: desc = \"transport: Error while dialing dial unix /var/run/containerd/containerd.sock: connect: connection refused\"" filter="nil"
 Apr 10 16:14:51 master kubelet[12039]: E0410 16:14:51.907622   12039 kuberuntime_sandbox.go:300] "Failed to list pod sandboxes" err="rpc error: code = Unavailable desc = connection error: desc = \"transport: Error while dialing dial unix /var/run/containerd/containerd.sock: connect: connection refused\""
 Apr 10 16:14:51 master kubelet[12039]: E0410 16:14:51.907746   12039 generic.go:236] "GenericPLEG: Unable to retrieve pods" err="rpc error: code = Unavailable desc = connection error: desc = \"transport: Error while dialing dial unix /var/run/containerd/containerd.sock: connect: connection refused\""
+
+
+## Add this before testing
+
+```bash
+export PATH=$PATH:/usr/local/go/bin
+```

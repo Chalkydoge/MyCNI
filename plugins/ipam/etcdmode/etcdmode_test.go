@@ -102,7 +102,7 @@ func TestCmdDel(t *testing.T) {
 		StdinData:   []byte(conf),
 	}
 
-	// Allocate the IP
+	// Release the IP
 	err = testutils.CmdDelWithArgs(args, func() error {
 		return cmdDel(args)
 	})

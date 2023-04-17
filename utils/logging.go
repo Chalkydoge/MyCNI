@@ -8,7 +8,7 @@ import (
 
 // For logging only
 const (
-	DEFAULT_LOG_PATH = "/home/ubuntu/go/src/mycni/mycni.log"
+	DEFAULT_LOG_PATH = "/home/sonic/go_workspace/MyCNI/mycni.log"
 )
 
 // Only do logging

@@ -1,747 +1,172 @@
-Start to exec ipam...(ip address is automatically recycled!) 
+Start to exec ipam Mode #local 
 IPAM plugin success. 
-host veth mac is ba:26:94:e1:a8:94 
-host veth mac is 3a:16:2d:24:82:69 
-ip netns exec ns1 arp -s 10.1.3.1 ea:20:23:fd:a4:f8 -i eth0 
-host veth mac is 76:a0:b5:84:d6:d8 
-host veth mac is 72:34:28:5b:06:78 
-ip netns exec ns1 arp -s 10.1.3.1 66:14:a6:ae:8b:c2 -i eth0 
-Trying to allocated IP for pod dummy0-eth0 
-Current hostIP pool is like:  
-Trying to allocated IP for pod dummy1-eth0 
-Current hostIP pool is like:  
-Release is ok till here 
-Release is ok till here 
-Host has an IP address  
-Fetched IP 10.1.1.0/28 
-Trying to allocated IP for pod dummy0-eth0 
-Current hostIP pool is like: 10.1.1.2/28;10.1.1.3/28;10.1.1.4/28;10.1.1.5/28;10.1.1.6/28;10.1.1.7/28;10.1.1.8/28;10.1.1.9/28;10.1.1.10/28;10.1.1.11/28;10.1.1.12/28;10.1.1.13/28;10.1.1.14/28;10.1.1.15/28 
-Trying to allocated IP for pod dummy1-eth0 
-Current hostIP pool is like: 10.1.1.3/28;10.1.1.4/28;10.1.1.5/28;10.1.1.6/28;10.1.1.7/28;10.1.1.8/28;10.1.1.9/28;10.1.1.10/28;10.1.1.11/28;10.1.1.12/28;10.1.1.13/28;10.1.1.14/28;10.1.1.15/28 
-Release is ok till here 
-Release is ok till here 
-Host has an IP address  
-Fetched IP 10.1.2.0/28 
-Trying to allocated IP for pod dummy0-eth0 
-Current hostIP pool is like: 10.1.2.2/28;10.1.2.3/28;10.1.2.4/28;10.1.2.5/28;10.1.2.6/28;10.1.2.7/28;10.1.2.8/28;10.1.2.9/28;10.1.2.10/28;10.1.2.11/28;10.1.2.12/28;10.1.2.13/28;10.1.2.14/28;10.1.2.15/28 
-Trying to allocated IP for pod dummy1-eth0 
-Current hostIP pool is like: 10.1.2.3/28;10.1.2.4/28;10.1.2.5/28;10.1.2.6/28;10.1.2.7/28;10.1.2.8/28;10.1.2.9/28;10.1.2.10/28;10.1.2.11/28;10.1.2.12/28;10.1.2.13/28;10.1.2.14/28;10.1.2.15/28 
-Release is ok till here 
-Release is ok till here 
-Host has an IP address  
-Fetched IP 10.1.3.0/28 
-Trying to allocated IP for pod dummy0-eth0 
-Current hostIP pool is like: 10.1.3.2/28;10.1.3.3/28;10.1.3.4/28;10.1.3.5/28;10.1.3.6/28;10.1.3.7/28;10.1.3.8/28;10.1.3.9/28;10.1.3.10/28;10.1.3.11/28;10.1.3.12/28;10.1.3.13/28;10.1.3.14/28;10.1.3.15/28 
-Trying to allocated IP for pod dummy1-eth0 
-Current hostIP pool is like: 10.1.3.3/28;10.1.3.4/28;10.1.3.5/28;10.1.3.6/28;10.1.3.7/28;10.1.3.8/28;10.1.3.9/28;10.1.3.10/28;10.1.3.11/28;10.1.3.12/28;10.1.3.13/28;10.1.3.14/28;10.1.3.15/28 
-Release is ok till here 
-Release is ok till here 
-Host has an IP address  
-Fetched IP 10.1.4.0/28 
-Trying to allocated IP for pod dummy0-eth0 
-Current hostIP pool is like: 10.1.4.2/28;10.1.4.3/28;10.1.4.4/28;10.1.4.5/28;10.1.4.6/28;10.1.4.7/28;10.1.4.8/28;10.1.4.9/28;10.1.4.10/28;10.1.4.11/28;10.1.4.12/28;10.1.4.13/28;10.1.4.14/28;10.1.4.15/28 
-Trying to allocated IP for pod dummy1-eth0 
-Current hostIP pool is like: 10.1.4.3/28;10.1.4.4/28;10.1.4.5/28;10.1.4.6/28;10.1.4.7/28;10.1.4.8/28;10.1.4.9/28;10.1.4.10/28;10.1.4.11/28;10.1.4.12/28;10.1.4.13/28;10.1.4.14/28;10.1.4.15/28 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-bhmwz 
-podname is coredns-5bbd96d687-hvjsk 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-podname is coredns-5bbd96d687-hvjsk 
-podname is coredns-5bbd96d687-bhmwz 
-podname is coredns-5bbd96d687-ggchs 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-bhmwz 
-podname is coredns-5bbd96d687-hvjsk 
-podname is coredns-5bbd96d687-ggchs 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-bhmwz 
-podname is coredns-5bbd96d687-hvjsk 
-podname is coredns-5bbd96d687-ggchs 
-podname is coredns-5bbd96d687-hvjsk 
-Current pod has not been allocated any IP! Skip 
-podname is coredns-5bbd96d687-bhmwz 
-Current pod has not been allocated any IP! Skip 
-podname is coredns-5bbd96d687-nffpx 
-Current pod has not been allocated any IP! Skip 
-Start to exec ipam...(ip address is automatically recycled!) 
-Host has an IP address  
-Fetched IP 10.1.5.0/28 
-Trying to allocated IP for pod 0cdcce6ffeca0bc0ac1eedfaa4a9a453fad66b49658dbc8fa2d206e60999fed9-eth0 
-Current hostIP pool is like: 10.1.5.2/28;10.1.5.3/28;10.1.5.4/28;10.1.5.5/28;10.1.5.6/28;10.1.5.7/28;10.1.5.8/28;10.1.5.9/28;10.1.5.10/28;10.1.5.11/28;10.1.5.12/28;10.1.5.13/28;10.1.5.14/28;10.1.5.15/28 
-IPAM plugin success. 
-host veth mac is d6:92:37:72:e1:a0 
-podname is coredns-5bbd96d687-ggchs 
-Repeat 1/5 times, got mac addr fe:93:de:a9:d5:41 
-Repeat 2/5 times, got mac addr fe:93:de:a9:d5:41 
-Repeat 3/5 times, got mac addr fe:93:de:a9:d5:41 
-Repeat 4/5 times, got mac addr fe:93:de:a9:d5:41 
-Repeat 5/5 times, got mac addr fe:93:de:a9:d5:41 
-Setup mapping complete! 
-ip netns exec cni-21d899cc-f9dc-ddac-7b89-81348a557b9e arp -s 10.1.5.1 fe:93:de:a9:d5:41 -i eth0 
+host veth mac is ea:0f:83:fd:a9:e7 
+Repeat 1/5 times, got mac addr 56:b1:ad:2c:1f:b3 
+Repeat 2/5 times, got mac addr 56:b1:ad:2c:1f:b3 
+Repeat 3/5 times, got mac addr 56:b1:ad:2c:1f:b3 
+Repeat 4/5 times, got mac addr 56:b1:ad:2c:1f:b3 
+Repeat 5/5 times, got mac addr 56:b1:ad:2c:1f:b3 
+Setup veth-ingress bpf mapping complete! 
+ip netns exec cni-7da443ff-4f56-fd95-3cce-4dd785f0cef6 arp -s 10.244.0.1 56:b1:ad:2c:1f:b3 -i eth0 
 ARP set complete! 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-podname is coredns-5bbd96d687-ggchs 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-hvjsk 
-Current pod has not been allocated any IP! Skip 
-podname is coredns-5bbd96d687-hvjsk 
-Current pod has not been allocated any IP! Skip 
-podname is coredns-5bbd96d687-bhmwz 
-Current pod has not been allocated any IP! Skip 
-podname is coredns-5bbd96d687-bhmwz 
-Current pod has not been allocated any IP! Skip 
-podname is coredns-5bbd96d687-ggchs 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-podname is coredns-5bbd96d687-nffpx 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-Release is ok till here 
-Start to exec ipam...(ip address is automatically recycled!) 
-podname is coredns-5bbd96d687-ggchs 
-Trying to allocated IP for pod 3b4fa09ea44b848aed71600a12c12193c5f2db8172a4acec864ed3feb81cfbd9-eth0 
-Current hostIP pool is like: 10.1.5.3/28;10.1.5.4/28;10.1.5.5/28;10.1.5.6/28;10.1.5.7/28;10.1.5.8/28;10.1.5.9/28;10.1.5.10/28;10.1.5.11/28;10.1.5.12/28;10.1.5.13/28;10.1.5.14/28;10.1.5.15/28;10.1.4.14/28;10.1.5.2/28 
+Clsact setup complete 
+ 
+Previously allocated IP is 10.244.0.54 
+Start to exec ipam Mode #local 
 IPAM plugin success. 
-host veth mac is 06:96:6a:e5:22:b5 
-Release is ok till here 
-Previously allocated IP is 10.1.3.2 
-Start to exec ipam...(ip address is automatically recycled!) 
-Trying to allocated IP for pod c90871d83450ece8d672f3676ea3f61dbc16d713a177ef74f124e8099b8914ca-eth0 
-Current hostIP pool is like: 10.1.5.4/28;10.1.5.5/28;10.1.5.6/28;10.1.5.7/28;10.1.5.8/28;10.1.5.9/28;10.1.5.10/28;10.1.5.11/28;10.1.5.12/28;10.1.5.13/28;10.1.5.14/28;10.1.5.15/28;10.1.4.14/28;10.1.5.2/28 
+host veth mac is 12:ec:25:8a:3b:32 
+Repeat 1/5 times, got mac addr b2:17:7b:dc:14:75 
+Repeat 2/5 times, got mac addr b2:17:7b:dc:14:75 
+Repeat 3/5 times, got mac addr b2:17:7b:dc:14:75 
+Repeat 4/5 times, got mac addr b2:17:7b:dc:14:75 
+Repeat 5/5 times, got mac addr b2:17:7b:dc:14:75 
+Setup veth-ingress bpf mapping complete! 
+ip netns exec cni-e40f073c-2e6c-245d-6bc0-698be2d9de15 arp -s 10.244.0.1 b2:17:7b:dc:14:75 -i eth0 
+ARP set complete! 
+Clsact setup complete 
+ 
+Previously allocated IP is 10.244.0.55 
+Start to exec ipam Mode #local 
 IPAM plugin success. 
-Repeat 1/5 times, got mac addr a2:7f:3d:a9:4c:d0 
-Repeat 2/5 times, got mac addr a2:7f:3d:a9:4c:d0 
-Repeat 3/5 times, got mac addr a2:7f:3d:a9:4c:d0 
-Repeat 4/5 times, got mac addr a2:7f:3d:a9:4c:d0 
-Repeat 5/5 times, got mac addr a2:7f:3d:a9:4c:d0 
-Setup mapping complete! 
-ip netns exec cni-14909573-9ceb-675b-ddc1-36b8a1dd1c7d arp -s 10.1.5.1 a2:7f:3d:a9:4c:d0 -i eth0 
-host veth mac is 72:b0:9c:f6:4d:03 
-ARP set complete! 
-Release is ok till here 
-Repeat 1/5 times, got mac addr 72:b0:9c:f6:4d:03 
-Repeat 2/5 times, got mac addr 72:b0:9c:f6:4d:03 
-Repeat 3/5 times, got mac addr 72:b0:9c:f6:4d:03 
-Repeat 4/5 times, got mac addr 72:b0:9c:f6:4d:03 
-Repeat 5/5 times, got mac addr 72:b0:9c:f6:4d:03 
-Setup mapping complete! 
-ip netns exec cni-ec460e9f-845e-9715-43cf-a8cc36200139 arp -s 10.1.5.1 72:b0:9c:f6:4d:03 -i eth0 
-ARP set complete! 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-Start to exec ipam...(ip address is automatically recycled!) 
-Start to exec ipam...(ip address is automatically recycled!) 
-Trying to allocated IP for pod a2a951d93716054533be12169c824ca748d8c502bb82cc6a9a88617b11d894ab-eth0 
-Current hostIP pool is like: 10.1.5.5/28;10.1.5.6/28;10.1.5.7/28;10.1.5.8/28;10.1.5.9/28;10.1.5.10/28;10.1.5.11/28;10.1.5.12/28;10.1.5.13/28;10.1.5.14/28;10.1.5.15/28;10.1.4.14/28;10.1.5.2/28;10.1.5.3/28;10.1.5.4/28 
+host veth mac is d2:be:61:5f:5c:03 
+Start to exec ipam Mode #local 
 IPAM plugin success. 
-host veth mac is 0a:b0:1c:01:63:5f 
-Trying to allocated IP for pod 19a64877c5a2f0659e57a810273887bf9cd32eb58b8303c190aac213c6bd9ec7-eth0 
-Current hostIP pool is like: 10.1.5.6/28;10.1.5.7/28;10.1.5.8/28;10.1.5.9/28;10.1.5.10/28;10.1.5.11/28;10.1.5.12/28;10.1.5.13/28;10.1.5.14/28;10.1.5.15/28;10.1.4.14/28;10.1.5.2/28;10.1.5.3/28;10.1.5.4/28 
+host veth mac is de:72:2e:58:55:55 
+Repeat 1/5 times, got mac addr 02:54:07:bd:a0:7e 
+Repeat 2/5 times, got mac addr 02:54:07:bd:a0:7e 
+Repeat 3/5 times, got mac addr 02:54:07:bd:a0:7e 
+Repeat 4/5 times, got mac addr 02:54:07:bd:a0:7e 
+Repeat 5/5 times, got mac addr 02:54:07:bd:a0:7e 
+Setup veth-ingress bpf mapping complete! 
+ip netns exec cni-611d5612-28a7-006b-d0cb-e0a76ad9e79d arp -s 10.244.0.1 02:54:07:bd:a0:7e -i eth0 
+ARP set complete! 
+Clsact setup complete 
+ 
+Repeat 1/5 times, got mac addr a2:a9:3a:a6:b1:fa 
+Repeat 2/5 times, got mac addr a2:a9:3a:a6:b1:fa 
+Repeat 3/5 times, got mac addr a2:a9:3a:a6:b1:fa 
+Repeat 4/5 times, got mac addr a2:a9:3a:a6:b1:fa 
+Repeat 5/5 times, got mac addr a2:a9:3a:a6:b1:fa 
+Setup veth-ingress bpf mapping complete! 
+ip netns exec cni-9b617179-8451-21cc-2d62-fd4b3f00cb3f arp -s 10.244.0.1 a2:a9:3a:a6:b1:fa -i eth0 
+ARP set complete! 
+Clsact setup complete 
+Previously allocated IP is 10.244.0.56 
+ 
+Previously allocated IP is 10.244.0.57 
+Start to exec ipam Mode #local 
 IPAM plugin success. 
-host veth mac is 4e:16:64:b4:d5:fd 
-Repeat 1/5 times, got mac addr 0a:b0:1c:01:63:5f 
-Repeat 2/5 times, got mac addr 0a:b0:1c:01:63:5f 
-Repeat 3/5 times, got mac addr 0a:b0:1c:01:63:5f 
-Repeat 4/5 times, got mac addr 0a:b0:1c:01:63:5f 
-Repeat 5/5 times, got mac addr 0a:b0:1c:01:63:5f 
-Setup mapping complete! 
-ip netns exec cni-bab6b580-6021-a7ef-f95e-dc17d9304322 arp -s 10.1.5.1 0a:b0:1c:01:63:5f -i eth0 
-ARP set complete! 
-Repeat 1/5 times, got mac addr 4e:16:64:b4:d5:fd 
-Repeat 2/5 times, got mac addr 4e:16:64:b4:d5:fd 
-Repeat 3/5 times, got mac addr 4e:16:64:b4:d5:fd 
-Repeat 4/5 times, got mac addr 4e:16:64:b4:d5:fd 
-Repeat 5/5 times, got mac addr 4e:16:64:b4:d5:fd 
-Setup mapping complete! 
-ip netns exec cni-ede6c00e-17a0-5767-33b8-fce0033a39b0 arp -s 10.1.5.1 4e:16:64:b4:d5:fd -i eth0 
-ARP set complete! 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-Start to exec ipam...(ip address is automatically recycled!) 
-Start to exec ipam...(ip address is automatically recycled!) 
-Trying to allocated IP for pod 5542b203c420f9a0b6708b4b460c282cdd75d4b833490f450e44c174e918adea-eth0 
-Current hostIP pool is like: 10.1.5.7/28;10.1.5.8/28;10.1.5.9/28;10.1.5.10/28;10.1.5.11/28;10.1.5.12/28;10.1.5.13/28;10.1.5.14/28;10.1.5.15/28;10.1.4.14/28;10.1.5.2/28;10.1.5.3/28;10.1.5.4/28;10.1.5.5/28;10.1.5.6/28 
+host veth mac is 66:6a:b8:fd:73:da 
+Start to exec ipam Mode #local 
 IPAM plugin success. 
-host veth mac is de:42:77:19:a6:28 
-Trying to allocated IP for pod 6716ae17b8d399d683308477f72bcb50d1a923fdbbb43ed8e2333f5becbd6db5-eth0 
-Current hostIP pool is like: 10.1.5.8/28;10.1.5.9/28;10.1.5.10/28;10.1.5.11/28;10.1.5.12/28;10.1.5.13/28;10.1.5.14/28;10.1.5.15/28;10.1.4.14/28;10.1.5.2/28;10.1.5.3/28;10.1.5.4/28;10.1.5.5/28;10.1.5.6/28 
+host veth mac is fa:09:57:c0:6b:fa 
+Repeat 1/5 times, got mac addr 2e:6f:01:14:e1:56 
+Repeat 2/5 times, got mac addr 2e:6f:01:14:e1:56 
+Repeat 3/5 times, got mac addr 2e:6f:01:14:e1:56 
+Repeat 4/5 times, got mac addr 2e:6f:01:14:e1:56 
+Repeat 5/5 times, got mac addr 2e:6f:01:14:e1:56 
+Setup veth-ingress bpf mapping complete! 
+ip netns exec cni-6b7fcfcb-8dca-4509-4972-3371ca6588c7 arp -s 10.244.0.1 2e:6f:01:14:e1:56 -i eth0 
+ARP set complete! 
+Clsact setup complete 
+tc filter replace dev veth283e362d ingress handle 0x1 bpf da obj /opt/cni/bin/veth_ingress.bpf.o 
+veth BPF attach complete! 
+Repeat 1/5 times, got mac addr 2a:02:03:91:d5:80 
+Repeat 2/5 times, got mac addr 2a:02:03:91:d5:80 
+Repeat 3/5 times, got mac addr 2a:02:03:91:d5:80 
+Repeat 4/5 times, got mac addr 2a:02:03:91:d5:80 
+Repeat 5/5 times, got mac addr 2a:02:03:91:d5:80 
+Setup veth-ingress bpf mapping complete! 
+ip netns exec cni-93c7ab7e-a939-853a-976c-101e82670824 arp -s 10.244.0.1 2a:02:03:91:d5:80 -i eth0 
+ARP set complete! 
+Clsact setup complete 
+tc filter replace dev veth955b2be8 ingress handle 0x1 bpf da obj /opt/cni/bin/veth_ingress.bpf.o 
+veth BPF attach complete! 
+Start to exec ipam Mode #local 
 IPAM plugin success. 
-host veth mac is 7e:e9:12:56:c4:3a 
-Repeat 1/5 times, got mac addr ba:32:b8:d8:78:a3 
-Repeat 2/5 times, got mac addr ba:32:b8:d8:78:a3 
-Repeat 3/5 times, got mac addr ba:32:b8:d8:78:a3 
-Repeat 4/5 times, got mac addr ba:32:b8:d8:78:a3 
-Repeat 5/5 times, got mac addr ba:32:b8:d8:78:a3 
-Setup mapping complete! 
-ip netns exec cni-872a9775-7df7-6a05-6c3e-98819a02b073 arp -s 10.1.5.1 ba:32:b8:d8:78:a3 -i eth0 
+host veth mac is b6:43:7e:28:de:3a 
+Repeat 1/5 times, got mac addr 82:a0:4c:88:55:0e 
+Repeat 2/5 times, got mac addr 82:a0:4c:88:55:0e 
+Repeat 3/5 times, got mac addr 82:a0:4c:88:55:0e 
+Repeat 4/5 times, got mac addr 82:a0:4c:88:55:0e 
+Repeat 5/5 times, got mac addr 82:a0:4c:88:55:0e 
+Setup veth-ingress bpf mapping complete! 
+ip netns exec cni-833bc4be-6e56-049a-9135-a66ad2f80765 arp -s 10.244.0.1 82:a0:4c:88:55:0e -i eth0 
 ARP set complete! 
-Release is ok till here 
-Repeat 1/5 times, got mac addr de:42:77:19:a6:28 
-Repeat 2/5 times, got mac addr de:42:77:19:a6:28 
-Repeat 3/5 times, got mac addr de:42:77:19:a6:28 
-Repeat 4/5 times, got mac addr de:42:77:19:a6:28 
-Repeat 5/5 times, got mac addr de:42:77:19:a6:28 
-Setup mapping complete! 
-ip netns exec cni-ad8e4632-dc5b-f463-1cc9-9df06b91cc29 arp -s 10.1.5.1 de:42:77:19:a6:28 -i eth0 
-ARP set complete! 
-podname is coredns-5bbd96d687-ggchs 
-podname is coredns-5bbd96d687-nffpx 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-Start to exec ipam...(ip address is automatically recycled!) 
-Start to exec ipam...(ip address is automatically recycled!) 
-Trying to allocated IP for pod f00ce0c0fab5de7567f0f51e756d2650a0fbb3c65d6d3cfd531017a7050aa6c6-eth0 
-Current hostIP pool is like: 10.1.5.9/28;10.1.5.10/28;10.1.5.11/28;10.1.5.12/28;10.1.5.13/28;10.1.5.14/28;10.1.5.15/28;10.1.4.14/28;10.1.5.2/28;10.1.5.3/28;10.1.5.4/28;10.1.5.5/28;10.1.5.6/28;10.1.5.8/28;10.1.5.7/28 
+Clsact setup complete 
+tc filter replace dev veth0c6e66be ingress handle 0x1 bpf da obj /opt/cni/bin/veth_ingress.bpf.o 
+veth BPF attach complete! 
+Previously allocated IP is 10.244.0.60 
+Start to exec ipam Mode #local 
 IPAM plugin success. 
-Trying to allocated IP for pod bf4d039fa848726f7350319e22006b63cda9db596b0b20781870c045054252c7-eth0 
-Current hostIP pool is like: 10.1.5.10/28;10.1.5.11/28;10.1.5.12/28;10.1.5.13/28;10.1.5.14/28;10.1.5.15/28;10.1.4.14/28;10.1.5.2/28;10.1.5.3/28;10.1.5.4/28;10.1.5.5/28;10.1.5.6/28;10.1.5.8/28;10.1.5.7/28 
+host veth mac is ce:65:f6:0a:a7:25 
+Repeat 1/5 times, got mac addr 7e:02:0f:05:93:e0 
+Repeat 2/5 times, got mac addr 7e:02:0f:05:93:e0 
+Repeat 3/5 times, got mac addr 7e:02:0f:05:93:e0 
+Repeat 4/5 times, got mac addr 7e:02:0f:05:93:e0 
+Repeat 5/5 times, got mac addr 7e:02:0f:05:93:e0 
+Setup veth-ingress bpf mapping complete! 
+ip netns exec cni-afce4726-f383-8ce9-d599-a1b2e717e29b arp -s 10.244.0.1 7e:02:0f:05:93:e0 -i eth0 
+ARP set complete! 
+Clsact setup complete 
+tc filter replace dev veth1145b0ec ingress handle 0x1 bpf da obj /opt/cni/bin/veth_ingress.bpf.o 
+veth BPF attach complete! 
+Previously allocated IP is 10.244.0.61 
+Start to exec ipam Mode #local 
 IPAM plugin success. 
-host veth mac is 1a:7c:4c:b3:e2:7c 
-host veth mac is 1a:9b:1d:19:ae:e0 
-Repeat 1/5 times, got mac addr 06:86:08:a6:b9:f1 
-Repeat 2/5 times, got mac addr 06:86:08:a6:b9:f1 
-Repeat 3/5 times, got mac addr 06:86:08:a6:b9:f1 
-Repeat 4/5 times, got mac addr 06:86:08:a6:b9:f1 
-Repeat 5/5 times, got mac addr 06:86:08:a6:b9:f1 
-Setup mapping complete! 
-ip netns exec cni-10dea758-77b6-fdd0-5545-c9c9b5054d15 arp -s 10.1.5.1 06:86:08:a6:b9:f1 -i eth0 
+host veth mac is e2:33:1f:c3:73:ce 
+Repeat 1/5 times, got mac addr 32:11:9a:76:da:ee 
+Repeat 2/5 times, got mac addr 32:11:9a:76:da:ee 
+Repeat 3/5 times, got mac addr 32:11:9a:76:da:ee 
+Repeat 4/5 times, got mac addr 32:11:9a:76:da:ee 
+Repeat 5/5 times, got mac addr 32:11:9a:76:da:ee 
+Setup veth-ingress bpf mapping complete! 
+ip netns exec cni-ed99b178-8c9b-e0a4-2aa4-83f9158ad3b5 arp -s 10.244.0.1 32:11:9a:76:da:ee -i eth0 
 ARP set complete! 
-Release is ok till here 
-Repeat 1/5 times, got mac addr 1a:7c:4c:b3:e2:7c 
-Repeat 2/5 times, got mac addr 1a:7c:4c:b3:e2:7c 
-Repeat 3/5 times, got mac addr 1a:7c:4c:b3:e2:7c 
-Repeat 4/5 times, got mac addr 1a:7c:4c:b3:e2:7c 
-Repeat 5/5 times, got mac addr 1a:7c:4c:b3:e2:7c 
-Setup mapping complete! 
-ip netns exec cni-614d04f6-4d0a-e23c-3a5d-39fcfbd0c331 arp -s 10.1.5.1 1a:7c:4c:b3:e2:7c -i eth0 
-ARP set complete! 
-podname is coredns-5bbd96d687-ggchs 
-podname is coredns-5bbd96d687-nffpx 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-Start to exec ipam...(ip address is automatically recycled!) 
-Start to exec ipam...(ip address is automatically recycled!) 
-Trying to allocated IP for pod ca48c95a6669f89a4f169cc04ef47875d95c9d4b39476bd134a1271c54db0a66-eth0 
-Current hostIP pool is like: 10.1.5.11/28;10.1.5.12/28;10.1.5.13/28;10.1.5.14/28;10.1.5.15/28;10.1.4.14/28;10.1.5.2/28;10.1.5.3/28;10.1.5.4/28;10.1.5.5/28;10.1.5.6/28;10.1.5.8/28;10.1.5.7/28;10.1.5.10/28;10.1.5.9/28 
+Clsact setup complete 
+tc filter replace dev veth18e24c02 ingress handle 0x1 bpf da obj /opt/cni/bin/veth_ingress.bpf.o 
+veth BPF attach complete! 
+Previously allocated IP is 10.244.0.62 
+Start to exec ipam Mode #local 
 IPAM plugin success. 
-host veth mac is de:aa:e0:7d:59:b1 
-Trying to allocated IP for pod b70a616fbe95e7e3289c4c0ac97c4a13092f50fc2b5cc100a99f1d8da08da00f-eth0 
-Current hostIP pool is like: 10.1.5.12/28;10.1.5.13/28;10.1.5.14/28;10.1.5.15/28;10.1.4.14/28;10.1.5.2/28;10.1.5.3/28;10.1.5.4/28;10.1.5.5/28;10.1.5.6/28;10.1.5.8/28;10.1.5.7/28;10.1.5.10/28;10.1.5.9/28 
+host veth mac is f6:d4:dd:a9:e5:cb 
+Repeat 1/5 times, got mac addr 6e:9a:b9:c7:70:27 
+Repeat 2/5 times, got mac addr 6e:9a:b9:c7:70:27 
+Repeat 3/5 times, got mac addr 6e:9a:b9:c7:70:27 
+Repeat 4/5 times, got mac addr 6e:9a:b9:c7:70:27 
+Repeat 5/5 times, got mac addr 6e:9a:b9:c7:70:27 
+Setup veth-ingress bpf mapping complete! 
+ip netns exec cni-ef2c4c25-3fa1-0e06-d341-ca35cf029db9 arp -s 10.244.0.1 6e:9a:b9:c7:70:27 -i eth0 
+ARP set complete! 
+Clsact setup complete 
+tc filter replace dev veth616f0948 ingress handle 0x1 bpf da obj /opt/cni/bin/veth_ingress.bpf.o 
+veth BPF attach complete! 
+Previously allocated IP is 10.244.0.63 
+Start to exec ipam Mode #local 
 IPAM plugin success. 
-host veth mac is 02:27:93:b5:eb:a2 
-Repeat 1/5 times, got mac addr ca:ef:0a:10:18:e0 
-Repeat 2/5 times, got mac addr ca:ef:0a:10:18:e0 
-Repeat 3/5 times, got mac addr ca:ef:0a:10:18:e0 
-Repeat 4/5 times, got mac addr ca:ef:0a:10:18:e0 
-Repeat 5/5 times, got mac addr ca:ef:0a:10:18:e0 
-Setup mapping complete! 
-ip netns exec cni-4fa4a001-0b62-44ea-fa56-e38a16b31ac3 arp -s 10.1.5.1 ca:ef:0a:10:18:e0 -i eth0 
-ARP set complete! 
-Repeat 1/5 times, got mac addr 4e:21:fb:20:aa:0f 
-Repeat 2/5 times, got mac addr 4e:21:fb:20:aa:0f 
-Repeat 3/5 times, got mac addr 4e:21:fb:20:aa:0f 
-Repeat 4/5 times, got mac addr 4e:21:fb:20:aa:0f 
-Repeat 5/5 times, got mac addr 4e:21:fb:20:aa:0f 
-Setup mapping complete! 
-ip netns exec cni-c05a41d2-69e7-1545-1825-fa655c90fc2a arp -s 10.1.5.1 4e:21:fb:20:aa:0f -i eth0 
-ARP set complete! 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-Start to exec ipam...(ip address is automatically recycled!) 
-Start to exec ipam...(ip address is automatically recycled!) 
-Trying to allocated IP for pod 96776b6c3e869b3c0f526935720cb9ba6638cf680f6b0b079994af3419038c24-eth0 
-Current hostIP pool is like: 10.1.5.13/28;10.1.5.14/28;10.1.5.15/28;10.1.4.14/28;10.1.5.2/28;10.1.5.3/28;10.1.5.4/28;10.1.5.5/28;10.1.5.6/28;10.1.5.8/28;10.1.5.7/28;10.1.5.10/28;10.1.5.9/28;10.1.5.11/28;10.1.5.12/28 
-Trying to allocated IP for pod ed50aebf2413e8209b56fa6a2ad8f00abf9e7a9d36d2516a1b0b2d439df0727f-eth0 
-Current hostIP pool is like: 10.1.5.14/28;10.1.5.15/28;10.1.4.14/28;10.1.5.2/28;10.1.5.3/28;10.1.5.4/28;10.1.5.5/28;10.1.5.6/28;10.1.5.8/28;10.1.5.7/28;10.1.5.10/28;10.1.5.9/28;10.1.5.11/28;10.1.5.12/28 
+host veth mac is d2:73:a4:ef:65:e1 
+Start to exec ipam Mode #local 
 IPAM plugin success. 
-IPAM plugin success. 
-host veth mac is 8e:f7:45:37:ca:2e 
-host veth mac is ba:fa:7f:49:b7:19 
-Repeat 1/5 times, got mac addr 1a:02:87:c6:18:4a 
-Repeat 2/5 times, got mac addr 1a:02:87:c6:18:4a 
-Repeat 3/5 times, got mac addr 1a:02:87:c6:18:4a 
-Repeat 4/5 times, got mac addr 1a:02:87:c6:18:4a 
-Repeat 5/5 times, got mac addr 1a:02:87:c6:18:4a 
-Setup mapping complete! 
-ip netns exec cni-253c0ca4-0545-3cb9-bc14-98c1ebffe389 arp -s 10.1.5.1 1a:02:87:c6:18:4a -i eth0 
+host veth mac is 26:a2:23:11:ac:c3 
+Repeat 1/5 times, got mac addr d2:24:4f:5b:71:3b 
+Repeat 2/5 times, got mac addr d2:24:4f:5b:71:3b 
+Repeat 3/5 times, got mac addr d2:24:4f:5b:71:3b 
+Repeat 4/5 times, got mac addr d2:24:4f:5b:71:3b 
+Repeat 5/5 times, got mac addr d2:24:4f:5b:71:3b 
+Setup veth-ingress bpf mapping complete! 
+ip netns exec cni-cb2dec69-680d-9099-e103-993edbeb2142 arp -s 10.244.0.1 d2:24:4f:5b:71:3b -i eth0 
 ARP set complete! 
-Release is ok till here 
-Repeat 1/5 times, got mac addr 8e:f7:45:37:ca:2e 
-Repeat 2/5 times, got mac addr 8e:f7:45:37:ca:2e 
-Repeat 3/5 times, got mac addr 8e:f7:45:37:ca:2e 
-Repeat 4/5 times, got mac addr 8e:f7:45:37:ca:2e 
-Repeat 5/5 times, got mac addr 8e:f7:45:37:ca:2e 
-Setup mapping complete! 
-ip netns exec cni-9e4b579c-1a3b-2125-f487-e6f238a2ba5b arp -s 10.1.5.1 8e:f7:45:37:ca:2e -i eth0 
+Clsact setup complete 
+tc filter replace dev veth34e21cfd ingress handle 0x1 bpf da obj /opt/cni/bin/veth_ingress.bpf.o 
+veth BPF attach complete! 
+Repeat 1/5 times, got mac addr c2:1b:8a:f6:b4:e6 
+Repeat 2/5 times, got mac addr c2:1b:8a:f6:b4:e6 
+Repeat 3/5 times, got mac addr c2:1b:8a:f6:b4:e6 
+Repeat 4/5 times, got mac addr c2:1b:8a:f6:b4:e6 
+Repeat 5/5 times, got mac addr c2:1b:8a:f6:b4:e6 
+Setup veth-ingress bpf mapping complete! 
+ip netns exec cni-3b305d4f-a43c-dd86-7a30-27520170dbe1 arp -s 10.244.0.1 c2:1b:8a:f6:b4:e6 -i eth0 
 ARP set complete! 
-podname is coredns-5bbd96d687-nffpx 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-nffpx 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-Start to exec ipam...(ip address is automatically recycled!) 
-podname is coredns-5bbd96d687-nffpx 
-Release is ok till here 
-Trying to allocated IP for pod a951c9067a5487e93160c4eb74d6714c128f620abc8c0e9527831634c2dc4527-eth0 
-Current hostIP pool is like: 10.1.5.15/28;10.1.4.14/28;10.1.5.2/28;10.1.5.3/28;10.1.5.4/28;10.1.5.5/28;10.1.5.6/28;10.1.5.8/28;10.1.5.7/28;10.1.5.10/28;10.1.5.9/28;10.1.5.11/28;10.1.5.12/28;10.1.5.13/28;10.1.5.14/28 
-IPAM plugin success. 
-host veth mac is 46:24:1f:67:63:b5 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Start to exec ipam...(ip address is automatically recycled!) 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-Trying to allocated IP for pod 3b2c869e8861e507ee83236deebce10b920d32b7566724c571702c26cab31693-eth0 
-Current hostIP pool is like: 10.1.4.14/28;10.1.5.2/28;10.1.5.3/28;10.1.5.4/28;10.1.5.5/28;10.1.5.6/28;10.1.5.8/28;10.1.5.7/28;10.1.5.10/28;10.1.5.9/28;10.1.5.11/28;10.1.5.12/28;10.1.5.13/28;10.1.5.14/28 
-IPAM plugin success. 
-host veth mac is d2:dd:39:0a:58:8b 
-Release is ok till here 
-Repeat 1/5 times, got mac addr 8a:e7:94:4e:4b:98 
-Repeat 2/5 times, got mac addr 8a:e7:94:4e:4b:98 
-Repeat 3/5 times, got mac addr 8a:e7:94:4e:4b:98 
-Repeat 4/5 times, got mac addr 8a:e7:94:4e:4b:98 
-Repeat 5/5 times, got mac addr 8a:e7:94:4e:4b:98 
-Setup mapping complete! 
-ip netns exec cni-7e5fcd32-4e22-057a-5dc3-b7ba7f8eb7d5 arp -s 10.1.5.1 8a:e7:94:4e:4b:98 -i eth0 
-ARP set complete! 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-Repeat 1/5 times, got mac addr 46:24:1f:67:63:b5 
-Repeat 2/5 times, got mac addr 46:24:1f:67:63:b5 
-Repeat 3/5 times, got mac addr 46:24:1f:67:63:b5 
-Repeat 4/5 times, got mac addr 46:24:1f:67:63:b5 
-Repeat 5/5 times, got mac addr 46:24:1f:67:63:b5 
-Setup mapping complete! 
-ip netns exec cni-ac164786-a479-c1db-9e3d-d95276a0c1dc arp -s 10.1.5.1 46:24:1f:67:63:b5 -i eth0 
-ARP set complete! 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-podname is coredns-5bbd96d687-nffpx 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-Start to exec ipam...(ip address is automatically recycled!) 
-Release is ok till here 
-Trying to allocated IP for pod de8b0d918bf16e9092510c4807a749f213360be7ba20a65648662ba396d7e7fa-eth0 
-Current hostIP pool is like: 10.1.5.2/28;10.1.5.3/28;10.1.5.4/28;10.1.5.5/28;10.1.5.6/28;10.1.5.8/28;10.1.5.7/28;10.1.5.10/28;10.1.5.9/28;10.1.5.11/28;10.1.5.12/28;10.1.5.13/28;10.1.5.14/28;10.1.4.14/28;10.1.5.15/28 
-podname is coredns-5bbd96d687-ggchs 
-IPAM plugin success. 
-host veth mac is c2:b4:d6:4b:cc:58 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Repeat 1/5 times, got mac addr 96:7c:d3:ef:9d:4a 
-Repeat 2/5 times, got mac addr 96:7c:d3:ef:9d:4a 
-Repeat 3/5 times, got mac addr 96:7c:d3:ef:9d:4a 
-Repeat 4/5 times, got mac addr 96:7c:d3:ef:9d:4a 
-Repeat 5/5 times, got mac addr 96:7c:d3:ef:9d:4a 
-Setup mapping complete! 
-ip netns exec cni-db543cda-4155-6540-ca77-ed071cc1a94c arp -s 10.1.5.1 96:7c:d3:ef:9d:4a -i eth0 
-Start to exec ipam...(ip address is automatically recycled!) 
-ARP set complete! 
-Trying to allocated IP for pod 4d9c1e78559d545c261e721aa5871e1976bf3a6fe9a4658481657013cee313f6-eth0 
-Current hostIP pool is like: 10.1.5.3/28;10.1.5.4/28;10.1.5.5/28;10.1.5.6/28;10.1.5.8/28;10.1.5.7/28;10.1.5.10/28;10.1.5.9/28;10.1.5.11/28;10.1.5.12/28;10.1.5.13/28;10.1.5.14/28;10.1.4.14/28;10.1.5.15/28 
-IPAM plugin success. 
-host veth mac is 16:49:03:18:02:00 
-Release is ok till here 
-Repeat 1/5 times, got mac addr 92:1e:32:66:b9:77 
-Repeat 2/5 times, got mac addr 92:1e:32:66:b9:77 
-Repeat 3/5 times, got mac addr 92:1e:32:66:b9:77 
-Repeat 4/5 times, got mac addr 92:1e:32:66:b9:77 
-Repeat 5/5 times, got mac addr 92:1e:32:66:b9:77 
-Setup mapping complete! 
-ip netns exec cni-9986b1ab-7d31-a262-7807-6510390240a0 arp -s 10.1.5.1 92:1e:32:66:b9:77 -i eth0 
-ARP set complete! 
-podname is coredns-5bbd96d687-ggchs 
-podname is coredns-5bbd96d687-nffpx 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-Start to exec ipam...(ip address is automatically recycled!) 
-podname is coredns-5bbd96d687-ggchs 
-Trying to allocated IP for pod 14308d2dda950d0f130976adbefe431709e2c477247b318b47296f50c80ccb1b-eth0 
-Release is ok till here 
-Current hostIP pool is like: 10.1.5.4/28;10.1.5.5/28;10.1.5.6/28;10.1.5.8/28;10.1.5.7/28;10.1.5.10/28;10.1.5.9/28;10.1.5.11/28;10.1.5.12/28;10.1.5.13/28;10.1.5.14/28;10.1.4.14/28;10.1.5.15/28;10.1.5.2/28;10.1.5.3/28 
-IPAM plugin success. 
-host veth mac is f2:2f:de:2f:74:2c 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-Repeat 1/5 times, got mac addr a2:fc:8b:79:8a:a6 
-Repeat 2/5 times, got mac addr a2:fc:8b:79:8a:a6 
-Repeat 3/5 times, got mac addr a2:fc:8b:79:8a:a6 
-Repeat 4/5 times, got mac addr a2:fc:8b:79:8a:a6 
-Repeat 5/5 times, got mac addr a2:fc:8b:79:8a:a6 
-Setup mapping complete! 
-ip netns exec cni-b481131b-f706-d352-41c8-76f15263077a arp -s 10.1.5.1 a2:fc:8b:79:8a:a6 -i eth0 
-ARP set complete! 
-Release is ok till here 
-Start to exec ipam...(ip address is automatically recycled!) 
-Trying to allocated IP for pod 8bd85371f1095b323419308774214131025ba7250ffcf1389ce20b002007f810-eth0 
-Current hostIP pool is like: 10.1.5.5/28;10.1.5.6/28;10.1.5.8/28;10.1.5.7/28;10.1.5.10/28;10.1.5.9/28;10.1.5.11/28;10.1.5.12/28;10.1.5.13/28;10.1.5.14/28;10.1.4.14/28;10.1.5.15/28;10.1.5.2/28;10.1.5.3/28 
-IPAM plugin success. 
-host veth mac is 42:1a:a6:f9:f8:e2 
-Release is ok till here 
-Repeat 1/5 times, got mac addr 0a:cb:36:de:00:59 
-Repeat 2/5 times, got mac addr 0a:cb:36:de:00:59 
-Repeat 3/5 times, got mac addr 0a:cb:36:de:00:59 
-Repeat 4/5 times, got mac addr 0a:cb:36:de:00:59 
-Repeat 5/5 times, got mac addr 0a:cb:36:de:00:59 
-Setup mapping complete! 
-ip netns exec cni-14339a22-7523-c1f5-1f52-8bda967f4baa arp -s 10.1.5.1 0a:cb:36:de:00:59 -i eth0 
-ARP set complete! 
-podname is coredns-5bbd96d687-ggchs 
-podname is coredns-5bbd96d687-nffpx 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-podname is coredns-5bbd96d687-nffpx 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-podname is coredns-5bbd96d687-nffpx 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-podname is coredns-5bbd96d687-nffpx 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-Start to exec ipam...(ip address is automatically recycled!) 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-Trying to allocated IP for pod d62798485aa98af28b0716bd8e0fc0962467a2830d85ac9f26b046ed3dcd79f0-eth0 
-Current hostIP pool is like: 10.1.5.6/28;10.1.5.8/28;10.1.5.7/28;10.1.5.10/28;10.1.5.9/28;10.1.5.11/28;10.1.5.12/28;10.1.5.13/28;10.1.5.14/28;10.1.4.14/28;10.1.5.15/28;10.1.5.2/28;10.1.5.3/28;10.1.5.4/28;10.1.5.5/28 
-IPAM plugin success. 
-host veth mac is 86:e8:2d:1b:eb:41 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Start to exec ipam...(ip address is automatically recycled!) 
-Trying to allocated IP for pod 0bf6eaa042f8f7cd8e7a5c908580d938614565c45b3ab48e8e36bc3b17db377a-eth0 
-Current hostIP pool is like: 10.1.5.8/28;10.1.5.7/28;10.1.5.10/28;10.1.5.9/28;10.1.5.11/28;10.1.5.12/28;10.1.5.13/28;10.1.5.14/28;10.1.4.14/28;10.1.5.15/28;10.1.5.2/28;10.1.5.3/28;10.1.5.4/28;10.1.5.5/28 
-IPAM plugin success. 
-host veth mac is a6:c6:0d:0e:80:f4 
-Repeat 1/5 times, got mac addr 86:e8:2d:1b:eb:41 
-Repeat 2/5 times, got mac addr 86:e8:2d:1b:eb:41 
-Repeat 3/5 times, got mac addr 86:e8:2d:1b:eb:41 
-Repeat 4/5 times, got mac addr 86:e8:2d:1b:eb:41 
-Repeat 5/5 times, got mac addr 86:e8:2d:1b:eb:41 
-Setup mapping complete! 
-ip netns exec cni-4ef6def7-b7db-e5e1-7689-e05d2317c762 arp -s 10.1.5.1 86:e8:2d:1b:eb:41 -i eth0 
-ARP set complete! 
-Release is ok till here 
-Repeat 1/5 times, got mac addr a6:c6:0d:0e:80:f4 
-Repeat 2/5 times, got mac addr a6:c6:0d:0e:80:f4 
-Repeat 3/5 times, got mac addr a6:c6:0d:0e:80:f4 
-Repeat 4/5 times, got mac addr a6:c6:0d:0e:80:f4 
-Repeat 5/5 times, got mac addr a6:c6:0d:0e:80:f4 
-Setup mapping complete! 
-ip netns exec cni-1f89fd06-6f34-b7c7-ec66-261a092ff563 arp -s 10.1.5.1 a6:c6:0d:0e:80:f4 -i eth0 
-ARP set complete! 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Start to exec ipam...(ip address is automatically recycled!) 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-Trying to allocated IP for pod 0321667ad5696ed58bbfc94f50b26b0566959d704179a1d7b213f41c2cac7a88-eth0 
-Current hostIP pool is like: 10.1.5.7/28;10.1.5.10/28;10.1.5.9/28;10.1.5.11/28;10.1.5.12/28;10.1.5.13/28;10.1.5.14/28;10.1.4.14/28;10.1.5.15/28;10.1.5.2/28;10.1.5.3/28;10.1.5.4/28;10.1.5.5/28;10.1.5.6/28;10.1.5.8/28 
-IPAM plugin success. 
-host veth mac is 6e:ca:07:2a:58:55 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-Repeat 1/5 times, got mac addr 2e:28:5b:b9:1a:cc 
-Repeat 2/5 times, got mac addr 2e:28:5b:b9:1a:cc 
-Repeat 3/5 times, got mac addr 2e:28:5b:b9:1a:cc 
-Repeat 4/5 times, got mac addr 2e:28:5b:b9:1a:cc 
-Repeat 5/5 times, got mac addr 2e:28:5b:b9:1a:cc 
-Setup mapping complete! 
-ip netns exec cni-12b25c71-fe62-c771-7247-692e8a5c9af3 arp -s 10.1.5.1 2e:28:5b:b9:1a:cc -i eth0 
-Release is ok till here 
-ARP set complete! 
-Start to exec ipam...(ip address is automatically recycled!) 
-Trying to allocated IP for pod 3429078772f574fce3534025dc2ddbdd443aecb1e5282be2414f28cf4ebb9468-eth0 
-Current hostIP pool is like: 10.1.5.10/28;10.1.5.9/28;10.1.5.11/28;10.1.5.12/28;10.1.5.13/28;10.1.5.14/28;10.1.4.14/28;10.1.5.15/28;10.1.5.2/28;10.1.5.3/28;10.1.5.4/28;10.1.5.5/28;10.1.5.6/28;10.1.5.8/28 
-IPAM plugin success. 
-host veth mac is 72:54:f6:b0:74:bc 
-Release is ok till here 
-Repeat 1/5 times, got mac addr c2:31:29:2b:0a:48 
-Repeat 2/5 times, got mac addr c2:31:29:2b:0a:48 
-Repeat 3/5 times, got mac addr c2:31:29:2b:0a:48 
-Repeat 4/5 times, got mac addr c2:31:29:2b:0a:48 
-Repeat 5/5 times, got mac addr c2:31:29:2b:0a:48 
-Setup mapping complete! 
-ip netns exec cni-2555510b-9c54-41f7-c267-7759485131e1 arp -s 10.1.5.1 c2:31:29:2b:0a:48 -i eth0 
-ARP set complete! 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-Start to exec ipam...(ip address is automatically recycled!) 
-Trying to allocated IP for pod 8f9064e356430bd550f9ee2549c617bcc85466b6a51b4e80cbd284438f847d58-eth0 
-Current hostIP pool is like: 10.1.5.9/28;10.1.5.11/28;10.1.5.12/28;10.1.5.13/28;10.1.5.14/28;10.1.4.14/28;10.1.5.15/28;10.1.5.2/28;10.1.5.3/28;10.1.5.4/28;10.1.5.5/28;10.1.5.6/28;10.1.5.8/28;10.1.5.7/28;10.1.5.10/28 
-IPAM plugin success. 
-host veth mac is ba:3d:7e:d0:10:62 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-Repeat 1/5 times, got mac addr 66:a7:fb:f4:41:95 
-Repeat 2/5 times, got mac addr 66:a7:fb:f4:41:95 
-Repeat 3/5 times, got mac addr 66:a7:fb:f4:41:95 
-Repeat 4/5 times, got mac addr 66:a7:fb:f4:41:95 
-Repeat 5/5 times, got mac addr 66:a7:fb:f4:41:95 
-Setup mapping complete! 
-ip netns exec cni-6e8df78d-a11a-ff4b-12aa-72947c403981 arp -s 10.1.5.1 66:a7:fb:f4:41:95 -i eth0 
-ARP set complete! 
-Release is ok till here 
-Start to exec ipam...(ip address is automatically recycled!) 
-Trying to allocated IP for pod ab5a0dd0047032c3b01aeee473f310232400824de451eddd669e115d2232163f-eth0 
-Current hostIP pool is like: 10.1.5.11/28;10.1.5.12/28;10.1.5.13/28;10.1.5.14/28;10.1.4.14/28;10.1.5.15/28;10.1.5.2/28;10.1.5.3/28;10.1.5.4/28;10.1.5.5/28;10.1.5.6/28;10.1.5.8/28;10.1.5.7/28;10.1.5.10/28 
-IPAM plugin success. 
-host veth mac is 32:f2:d6:48:b1:66 
-Release is ok till here 
-Repeat 1/5 times, got mac addr 32:f2:d6:48:b1:66 
-Repeat 2/5 times, got mac addr 32:f2:d6:48:b1:66 
-Repeat 3/5 times, got mac addr 32:f2:d6:48:b1:66 
-Repeat 4/5 times, got mac addr 32:f2:d6:48:b1:66 
-Repeat 5/5 times, got mac addr 32:f2:d6:48:b1:66 
-Setup mapping complete! 
-ip netns exec cni-5069bdd5-cdbd-c021-e5df-afaa7e1680da arp -s 10.1.5.1 32:f2:d6:48:b1:66 -i eth0 
-ARP set complete! 
-podname is coredns-5bbd96d687-ggchs 
-podname is coredns-5bbd96d687-nffpx 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-podname is coredns-5bbd96d687-nffpx 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-podname is coredns-5bbd96d687-nffpx 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Release is ok till here 
-Start to exec ipam...(ip address is automatically recycled!) 
-podname is coredns-5bbd96d687-ggchs 
-Trying to allocated IP for pod 3d3b15367a48e7460b6d95e7f39142f6e191f52183c23c5e891361d80982e5ed-eth0 
-Current hostIP pool is like: 10.1.5.12/28;10.1.5.13/28;10.1.5.14/28;10.1.4.14/28;10.1.5.15/28;10.1.5.2/28;10.1.5.3/28;10.1.5.4/28;10.1.5.5/28;10.1.5.6/28;10.1.5.8/28;10.1.5.7/28;10.1.5.10/28;10.1.5.9/28;10.1.5.11/28 
-IPAM plugin success. 
-host veth mac is de:8e:c0:d5:a4:40 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-podname is coredns-5bbd96d687-ggchs 
-Release is ok till here 
-Start to exec ipam...(ip address is automatically recycled!) 
-Trying to allocated IP for pod f427a2afda948749efd471f68a5ffa12810899546a2a433c01bc48e47cfa208d-eth0 
-Current hostIP pool is like: 10.1.5.13/28;10.1.5.14/28;10.1.4.14/28;10.1.5.15/28;10.1.5.2/28;10.1.5.3/28;10.1.5.4/28;10.1.5.5/28;10.1.5.6/28;10.1.5.8/28;10.1.5.7/28;10.1.5.10/28;10.1.5.9/28;10.1.5.11/28 
-IPAM plugin success. 
-host veth mac is a6:56:e4:a5:d6:16 
-Repeat 1/5 times, got mac addr de:8e:c0:d5:a4:40 
-Repeat 2/5 times, got mac addr de:8e:c0:d5:a4:40 
-Repeat 3/5 times, got mac addr de:8e:c0:d5:a4:40 
-Repeat 4/5 times, got mac addr de:8e:c0:d5:a4:40 
-Repeat 5/5 times, got mac addr de:8e:c0:d5:a4:40 
-Setup mapping complete! 
-ip netns exec cni-f76e4ca7-6878-af88-08cf-7b1990bc61c7 arp -s 10.1.5.1 de:8e:c0:d5:a4:40 -i eth0 
-ARP set complete! 
-Release is ok till here 
-Repeat 1/5 times, got mac addr a6:56:e4:a5:d6:16 
-Repeat 2/5 times, got mac addr a6:56:e4:a5:d6:16 
-Repeat 3/5 times, got mac addr a6:56:e4:a5:d6:16 
-Repeat 4/5 times, got mac addr a6:56:e4:a5:d6:16 
-Repeat 5/5 times, got mac addr a6:56:e4:a5:d6:16 
-Setup mapping complete! 
-ip netns exec cni-137b5c53-55a1-af73-3116-b3c3045b3af6 arp -s 10.1.5.1 a6:56:e4:a5:d6:16 -i eth0 
-ARP set complete! 
+Clsact setup complete 
+tc filter replace dev veth91330bad ingress handle 0x1 bpf da obj /opt/cni/bin/veth_ingress.bpf.o 
+veth BPF attach complete! 

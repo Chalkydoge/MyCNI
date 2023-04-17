@@ -33,8 +33,7 @@ int veth_ingress(struct __sk_buff *ctx)
 	void *data = (void *)(__u64)ctx->data;
 	struct ethhdr *l2;
 	struct iphdr *l3;
-    
-    bpf_printk("loaded");
+
 
     // non-ip protocol
 	if (ctx->protocol != bpf_htons(ETH_P_IP))
@@ -60,17 +59,11 @@ int veth_ingress(struct __sk_buff *ctx)
     
     // Lookup ep info with dest ip    
     struct epInfo *ep = bpf_map_lookup_elem(&lxc_map, &dst_ip);    
-    bpf_printk("Looking up inside bpf map with key=%d", dst_ip);
-    bpf_printk("BPF Map obj null? %d", (&lxc_map != NULL));
-    bpf_printk("ep info: %d", (ep != NULL));
-
     if (ep) {
         // exist inside lxc_map => pods on same node
         // rewrite mac addr to src:[lxc mac] and dst:[pod mac]
         // then, redirect the packet to target pod's lxc
         __u32 redirect_ifindex = ep->lxc_ifindex;
-
-        bpf_printk("Redirect packet to device #%d", redirect_ifindex);
 
         // load src mac, dst mac from ethhdr
         for (int i = 0; i < ETH_ALEN; i++) {

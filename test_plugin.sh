@@ -6,6 +6,9 @@ ls
 cd ../../../../bpfmap
 ls
 
+go test -v -run TestIterate
+go test -v -run TestResetMap
+
 # remove old conf & replace
 cd ../
 
@@ -16,8 +19,8 @@ cp 10-mynet.conf /etc/cni/net.d
 
 
 # Remove old plugins and copy new one
-if [ -f "/opt/cni/bin/etcdmode" ];then
-    rm /opt/cni/bin/etcdmode
+if [ -f "/opt/cni/bin/local" ];then
+    rm /opt/cni/bin/local
 fi
 
 if [ -f "/opt/cni/bin/vxlan" ];then
@@ -30,7 +33,7 @@ fi
 
 cd bin
 
-cp etcdmode /opt/cni/bin
+cp local /opt/cni/bin
 cp vxlan /opt/cni/bin
 cp veth_ingress.bpf.o /opt/cni/bin
 

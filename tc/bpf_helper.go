@@ -3,6 +3,7 @@ package tc
 import (
 	"fmt"
 	"mycni/consts"
+	"mycni/utils"
 	"os/exec"
 	"strings"
 )
@@ -78,6 +79,7 @@ func AttachBPF2Device(device, prog string, dir BPF_TC_DIRECT) error {
 			return err
 		}
 	}
+	utils.Log("Clsact setup complete")
 
 	var cmd string
 	switch dir {
@@ -89,6 +91,7 @@ func AttachBPF2Device(device, prog string, dir BPF_TC_DIRECT) error {
 
 	p := exec.Command("/bin/sh", "-c", cmd)
 	_, err := p.Output()
+	utils.Log(cmd)
 	return err
 }
 

@@ -2,21 +2,46 @@ package main
 
 import (
 	"fmt"
-	"mycni/bpfmap"
 	"mycni/pkg/testutils"
-	"net"
 	"testing"
 
 	"github.com/containernetworking/cni/pkg/skel"
-	"github.com/containernetworking/cni/pkg/types"
-	current "github.com/containernetworking/cni/pkg/types/100"
-	"github.com/containernetworking/plugins/pkg/ns"
-	"github.com/stretchr/testify/assert"
-	"github.com/vishvananda/netlink"
 )
 
-func TestCmdAddPod1(t *testing.T) {
-	te := assert.New(t)
+func TestCmdAdd(t *testing.T) {
+	for i := 1; i < 3; i++ {
+		conf := fmt.Sprintf(`{
+			"cniVersion": "%s",
+			"name": "mynet",
+			"type": "vxlan",
+			"ipam": {
+				"type": "local",
+				"dns": {
+					"nameservers": ["8.8.8.8"]
+				}
+			},
+			"dataDir": ""
+		}`, "1.0.0")
+
+		args := &skel.CmdArgs{
+			ContainerID: "308102901b7fe9538fcfc71669d505bc09f9def5eb05adeddb73a948bb4b2c8b",
+			Netns:       fmt.Sprintf("/var/run/netns/ns%d", i),
+			IfName:      "eth0",
+			Args:        fmt.Sprintf("K8S_POD_NAMESPACE=test_only_%d;K8S_POD_NAME=foobar-c676cc86f-4kz2t", i),
+			Path:        "/home/ubuntu/go/src/mycni/bin",
+			StdinData:   []byte(conf),
+		}
+		_, _, err := testutils.CmdAddWithArgs(args, func() error {
+			return cmdAdd(args)
+		})
+		if err != nil {
+			t.Log(err)
+		}
+		t.Logf("Setting up pod %d", i)
+	}
+}
+
+func TestIPAMDelegate2(t *testing.T) {
 	conf := fmt.Sprintf(`{
 		"cniVersion": "%s",
 		"name": "mynet",
@@ -28,265 +53,9 @@ func TestCmdAddPod1(t *testing.T) {
 
 	args := &skel.CmdArgs{
 		ContainerID: "308102901b7fe9538fcfc71669d505bc09f9def5eb05adeddb73a948bb4b2c8b",
-		Netns:       "/var/run/netns/ns1",
-		IfName:      "eth0",
-		Args:        "K8S_POD_NAMESPACE=kube-system;K8S_POD_NAME=coredns-5bbd96d687-ggchs",
-		Path:        "/opt/cni/bin",
-		StdinData:   []byte(conf),
-	}
-
-	// Load CNI config first
-	n, cniVersion, err := loadNetConf(args.StdinData, args.Args)
-	te.Nil(err)
-	te.Equal(cniVersion, "1.0.0")
-	te.Equal(n.IPAM.Type, "etcdmode")
-
-	// Assume L2 interface only
-	result := &current.Result{
-		CNIVersion: current.ImplementedSpecVersion,
-		Interfaces: []*current.Interface{}, // nothing here
-	}
-
-	// Assume result we have from ipam.ExecAdd is
-	// etcdmode_test.go:45:
-	// ipamRes := &{1.0.0 [] [{Interface:<nil> Address:{IP:10.1.1.6 Mask:fffffff0} Gateway:10.1.1.1}] [] {[]  [] []}}
-	ipnet := net.IPNet{
-		IP:   net.ParseIP("10.1.3.2"),
-		Mask: net.IPv4Mask(0xff, 0xff, 0xff, 0xf0),
-	}
-	// Assume this is the ipam result, we have current ip net 10.1.1.6/28
-	// and gateway ip = 10.1.1.1
-	ipamRes := current.Result{
-		CNIVersion: "1.0.0",
-		Interfaces: []*current.Interface{},
-		IPs: []*current.IPConfig{
-			{
-				Interface: nil,
-				Address:   ipnet,
-				Gateway:   net.ParseIP("10.1.3.1"),
-			},
-		},
-		Routes: []*types.Route{},
-		DNS: types.DNS{
-			Nameservers: []string{},
-			Domain:      "",
-			Search:      []string{},
-			Options:     []string{},
-		},
-	}
-
-	// Configure the container hardware address and IP address(es)
-	result.IPs = ipamRes.IPs
-
-	if len(result.IPs) == 0 {
-		t.Error("IPAM plugin returned missing IP config")
-	}
-	// setup netns
-	netns, err := ns.GetNS(args.Netns)
-	if err != nil {
-		t.Errorf("failed to open netns %q: %v", args.Netns, err)
-	}
-	defer netns.Close()
-
-	hostInterface, containerInterface, err := setupContainerVeth(netns, args.IfName, 1450, result)
-	if err != nil {
-		t.Log(err)
-	}
-
-	var tmpMac string
-	for i := 0; i < 5; i++ {
-		hostv, err := netlink.LinkByName(hostInterface.Name)
-		if err != nil {
-			t.Log(err)
-		}
-		t.Logf("Repeat %d/5 times, got mac addr %s", i+1, hostv.Attrs().HardwareAddr.String())
-		tmpMac = hostv.Attrs().HardwareAddr.String()
-	}
-
-	t.Log(result)
-
-	hostv, err := netlink.LinkByName(hostInterface.Name)
-	if err != nil {
-		t.Log(err)
-	}
-	podv, err := getContainerVeth(netns, containerInterface.Name)
-	if err != nil {
-		t.Log(err)
-	}
-
-	setVethPairInfo2LxcMap("10.1.3.2/28", hostv.(*netlink.Veth), podv)
-	t.Log("BPF Map for pod1 complete!")
-
-	setPodIP2PodMap(n.podname, "10.1.3.2/28")
-	t.Log("Write pod-ip mapping complete!")
-
-	mp, err := bpfmap.CreateLxcMap()
-	if err != nil {
-		t.Log(err)
-	}
-
-	epInfo := &bpfmap.EndpointMapInfo{}
-	err = mp.Lookup(bpfmap.EndpointMapKey{IP: InetIpToUInt32("10.1.3.2")}, epInfo)
-	if err != nil {
-		t.Log(err)
-	}
-	t.Log(epInfo)
-
-	writtenIP, err := loadPodIP(n.podname)
-	if err != nil {
-		t.Log(err)
-	}
-	t.Logf("Recorded mapping of pod name %s to ip address %s", n.podname, writtenIP)
-
-	// Last set arp
-	err = SetARP("10.1.3.1", "eth0", tmpMac, "ns1")
-	if err != nil {
-		t.Log(err.Error())
-	}
-	t.Log("ARP set complete!")
-
-}
-
-func TestCmdAddPod2(t *testing.T) {
-	te := assert.New(t)
-	conf := fmt.Sprintf(`{
-		"cniVersion": "%s",
-		"name": "mynet",
-		"type": "vxlan",
-		"ipam": {
-			"type": "etcdmode"
-		}
-	}`, "1.0.0")
-
-	args := &skel.CmdArgs{
-		ContainerID: "30810114514fe9538fcfc71669d505bc09f9def5eb05adeddb73a948bb4b2c8b",
 		Netns:       "/var/run/netns/ns2",
 		IfName:      "eth0",
-		Args:        "K8S_POD_NAMESPACE=kube-system;K8S_POD_NAME=coredns-c67ddc86f-4kz2t",
-		Path:        "/opt/cni/bin",
-		StdinData:   []byte(conf),
-	}
-
-	// Load CNI config first
-	n, cniVersion, err := loadNetConf(args.StdinData, args.Args)
-	te.Nil(err)
-	te.Equal(cniVersion, "1.0.0")
-	te.Equal(n.IPAM.Type, "etcdmode")
-
-	// Assume L2 interface only
-	result := &current.Result{
-		CNIVersion: current.ImplementedSpecVersion,
-		Interfaces: []*current.Interface{}, // nothing here
-	}
-
-	// Assume result we have from ipam.ExecAdd is
-	// etcdmode_test.go:45:
-	// ipamRes := &{1.0.0 [] [{Interface:<nil> Address:{IP:10.1.1.6 Mask:fffffff0} Gateway:10.1.1.1}] [] {[]  [] []}}
-	ipnet := net.IPNet{
-		IP:   net.ParseIP("10.1.3.3"),
-		Mask: net.IPv4Mask(0xff, 0xff, 0xff, 0xf0),
-	}
-	// Assume this is the ipam result, we have current ip net 10.1.1.6/28
-	// and gateway ip = 10.1.1.1
-	ipamRes := current.Result{
-		CNIVersion: "1.0.0",
-		Interfaces: []*current.Interface{},
-		IPs: []*current.IPConfig{
-			{
-				Interface: nil,
-				Address:   ipnet,
-				Gateway:   net.ParseIP("10.1.3.1"),
-			},
-		},
-		Routes: []*types.Route{},
-		DNS: types.DNS{
-			Nameservers: []string{},
-			Domain:      "",
-			Search:      []string{},
-			Options:     []string{},
-		},
-	}
-
-	// Configure the container hardware address and IP address(es)
-	result.IPs = ipamRes.IPs
-
-	if len(result.IPs) == 0 {
-		t.Error("IPAM plugin returned missing IP config")
-	}
-	// setup netns
-	netns, err := ns.GetNS(args.Netns)
-	if err != nil {
-		t.Errorf("failed to open netns %q: %v", args.Netns, err)
-	}
-	defer netns.Close()
-
-	hostInterface, containerInterface, err := setupContainerVeth(netns, args.IfName, 1450, result)
-	if err != nil {
-		t.Log(err)
-	}
-	// if err = setupHostVeth(hostInterface.Name, result); err != nil {
-	// 	t.Log(err)
-	// }
-
-	var tmpMac string
-	for i := 0; i < 5; i++ {
-		hostv, err := netlink.LinkByName(hostInterface.Name)
-		if err != nil {
-			t.Log(err)
-		}
-		t.Logf("Repeat %d/5 times, got mac addr %s", i+1, hostv.Attrs().HardwareAddr.String())
-		tmpMac = hostv.Attrs().HardwareAddr.String()
-	}
-
-	t.Log(result)
-
-	hostv, err := netlink.LinkByName(hostInterface.Name)
-	if err != nil {
-		t.Log(err)
-	}
-	podv, err := getContainerVeth(netns, containerInterface.Name)
-	if err != nil {
-		t.Log(err)
-	}
-
-	setVethPairInfo2LxcMap("10.1.3.3/28", hostv.(*netlink.Veth), podv)
-	t.Log("BPF Map for pod2 complete!")
-
-	mp, err := bpfmap.CreateLxcMap()
-	if err != nil {
-		t.Log(err)
-	}
-
-	epInfo := &bpfmap.EndpointMapInfo{}
-	err = mp.Lookup(bpfmap.EndpointMapKey{IP: InetIpToUInt32("10.1.3.3")}, epInfo)
-	if err != nil {
-		t.Log(err)
-	}
-	t.Log(epInfo)
-
-	// Last set arp
-	err = SetARP("10.1.3.1", "eth0", tmpMac, "ns2")
-	if err != nil {
-		t.Log(err.Error())
-	}
-	t.Log("ARP set complete!")
-}
-
-func TestIPAMDelegate(t *testing.T) {
-	conf := fmt.Sprintf(`{
-		"cniVersion": "%s",
-		"name": "mynet",
-		"type": "vxlan",
-		"ipam": {
-			"type": "etcdmode"
-		}
-	}`, "1.0.0")
-
-	args := &skel.CmdArgs{
-		ContainerID: "308102901b7fe9538fcfc71669d505bc09f9def5eb05adeddb73a948bb4b2c8b",
-		Netns:       "/var/run/netns/ns1",
-		IfName:      "eth0",
-		Args:        "K8S_POD_NAMESPACE=test_only;K8S_POD_NAME=foobar-c676cc86f-4kz2t",
+		Args:        "K8S_POD_NAMESPACE=test_only;K8S_POD_NAME=foobar-c676cc86f-334ff",
 		Path:        "/home/ubuntu/go/src/mycni/bin",
 		StdinData:   []byte(conf),
 	}
@@ -300,29 +69,36 @@ func TestIPAMDelegate(t *testing.T) {
 }
 
 func TestCmdDel(t *testing.T) {
-	conf := fmt.Sprintf(`{
-		"cniVersion": "%s",
-		"name": "mynet",
-		"type": "vxlan",
-		"ipam": {
-			"type": "etcdmode"
+	for i := 1; i < 3; i++ {
+		conf := fmt.Sprintf(`{
+			"cniVersion": "%s",
+			"name": "mynet",
+			"type": "vxlan",
+			"ipam": {
+				"type": "local",
+				"dns": {
+					"nameservers": ["8.8.8.8"]
+				}
+			},
+			"dataDir": ""
+		}`, "1.0.0")
+
+		args := &skel.CmdArgs{
+			ContainerID: "308102901b7fe9538fcfc71669d505bc09f9def5eb05adeddb73a948bb4b2c8b",
+			Netns:       fmt.Sprintf("/var/run/netns/ns%d", i),
+			IfName:      "eth0",
+			Args:        fmt.Sprintf("K8S_POD_NAMESPACE=test_only_%d;K8S_POD_NAME=foobar-c676cc86f-4kz2t", i),
+			Path:        "/home/ubuntu/go/src/mycni/bin",
+			StdinData:   []byte(conf),
 		}
-	}`, "1.0.0")
 
-	args := &skel.CmdArgs{
-		ContainerID: "308102901b7fe9538fcfc71669d505bc09f9def5eb05adeddb73a948bb4b2c8b",
-		Netns:       "/var/run/netns/cni-1f93fba0-6523-6202-35b7-698943074dce",
-		IfName:      "eth0",
-		Args:        "K8S_POD_NAMESPACE=kube-system;K8S_POD_NAME=coredns-5bbd96d687-ggchs",
-		Path:        "/home/ubuntu/go/src/mycni/bin",
-		StdinData:   []byte(conf),
-	}
-
-	err := testutils.CmdDelWithArgs(args, func() error {
-		return cmdDel(args)
-	})
-	if err != nil {
-		t.Log(err)
+		err := testutils.CmdDelWithArgs(args, func() error {
+			return cmdDel(args)
+		})
+		if err != nil {
+			t.Log(err)
+		}
+		t.Logf("Removing pod %d ok", i)
 	}
 }
 

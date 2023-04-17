@@ -10,11 +10,11 @@ const (
 	// change the path to tc global(because bpf program is attached to `tc`)
 	LXC_MAP_DEFAULT_PATH   = "/sys/fs/bpf/tc/globals/lxc_map"
 	LXC_MAP_NAME           = "lxc_map"
-	MAX_ENTRIES            = 10
+	MAX_ENTRIES            = 32
 	ETH_ALEN               = 6
 	POD_IP_MAP_PATH        = "/sys/fs/bpf/pod_map"
 	POD_IP_MAP_NAME        = "pod_map"
-	POD_IP_MAP_MAX_ENTRIES = 20
+	POD_IP_MAP_MAX_ENTRIES = 32
 )
 
 // keysize = 4bytes

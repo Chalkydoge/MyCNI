@@ -220,12 +220,14 @@ func ReleasePodIP(containerID, ifname string, cli *etcdwrap.WrappedClient) (bool
 
 	// update back to hostpool
 	cli.PutKV(utils.GetHostIPPoolPath(), utils.ConvertArray2String(ips))
+  utils.Log("Return back ip to pool ok")
 
 	// update current device's ip info into db
 	err = cli.DelKV(utils.GetNetDevicePath(id))
 	if err != nil {
 		return false, fmt.Errorf("Error happened when removing config for device %s! error is %v", id, err)
 	}
+  utils.Log("Remove current dev's ip ok")
 	return true, nil
 }
 

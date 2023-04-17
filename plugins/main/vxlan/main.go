@@ -256,8 +256,6 @@ func getContainerVeth(netns ns.NetNS, ifName string) (*netlink.Veth, error) {
 	return podVeth, err
 }
 
-/****************************VXLAN part*****************************/
-
 // create ARP Entry
 func createARPEntry(ip, mac, dev, ns_name string) error {
 	cmd := fmt.Sprintf("ip netns exec %s arp -s %s %s -i %s", ns_name, ip, mac, dev)
@@ -285,8 +283,6 @@ func SetARP(gatewayIP, deviceName, mac, nsName string) error {
 	return createARPEntry(gatewayIP, mac, deviceName, nsName)
 }
 
-/*******************BPF MAP***************************/
-
 func stuff8Byte(b []byte) [8]byte {
 	var res [8]byte
 	if len(b) > 8 {
@@ -299,6 +295,7 @@ func stuff8Byte(b []byte) [8]byte {
 	return res
 }
 
+// Helpers
 func InetIpToUInt32(ip string) uint32 {
 	bits := strings.Split(ip, ".")
 	b0, _ := strconv.Atoi(bits[0])
@@ -451,7 +448,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 	// need ipam?
 	isLayer3 := (n.IPAM.Type != "")
 	if isLayer3 {
-		utils.Log("Start to exec ipam...(ip address is automatically recycled!)")
+		utils.Log("Start to exec ipam Mode #" + n.IPAM.Type)
 		r, err := ipam.ExecAdd(n.IPAM.Type, args.StdinData)
 		if err != nil {
 			return err
@@ -513,10 +510,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 
 	// Then write mac-ip mapping into bpf map
 	setVethPairInfo2LxcMap(allocatedIPCIDR, hostv.(*netlink.Veth), podv)
-
-	// Then write container-ip mapping into bpf map
-	setPodIP2PodMap(n.podname, allocatedIPCIDR)
-	utils.Log("Setup mapping complete!")
+	utils.Log("Setup veth-ingress bpf mapping complete!")
 
 	// Last set arp
 	// Get the last item(ns name) from given path
@@ -532,6 +526,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 	if err != nil {
 		return err
 	}
+	utils.Log("veth BPF attach complete!")
 
 	return types.PrintResult(result, cniVersion)
 }
@@ -540,16 +535,16 @@ func cmdCheck(args *skel.CmdArgs) error {
 	return nil
 }
 
+// 这里把bpfmap中 lxcmap的部分给放在删除设备的时候一起执行
+// podname-IP的映射多余了
 func cmdDel(args *skel.CmdArgs) error {
 	n, _, err := loadNetConf(args.StdinData, args.Args)
 	if err != nil {
 		return err
 	}
 
-	podIP, err := loadPodIP(n.podname)
 	if err != nil {
-		utils.Log("Current pod has not been allocated any IP! Skip")
-		return nil
+		return err
 	}
 
 	// Then, ipam exec del
@@ -570,6 +565,16 @@ func cmdDel(args *skel.CmdArgs) error {
 		if err != nil && err == ip.ErrLinkNotFound {
 			return nil
 		}
+		// Then del bpf map entry
+		// IP from plugin captured result
+		// Remove entry by this IP
+		for _, ipnet := range ipnets {
+			podIP := ipnet.IP.String()
+			utils.Log("Previously allocated IP is " + podIP)
+			bpfmap.DelKeyLxcMap(bpfmap.EndpointMapKey{
+				IP: InetIpToUInt32(podIP),
+			})
+		}
 		return err
 	})
 
@@ -577,15 +582,7 @@ func cmdDel(args *skel.CmdArgs) error {
 	if len(ipnets) != 0 {
 		return err
 	}
-
-	// Then del bpf map entry
-	// IP from plugin captured result
-	// Remove entry by this IP
-	utils.Log("Previously allocated IP is " + podIP)
-	err = bpfmap.DelKeyLxcMap(bpfmap.EndpointMapKey{
-		IP: InetIpToUInt32(podIP),
-	})
-	return err
+	return nil
 }
 
 // command used by cilium:
