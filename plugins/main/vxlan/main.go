@@ -27,6 +27,8 @@ import (
 	"github.com/vishvananda/netlink"
 )
 
+const MODE_VXLAN = 1
+
 type NetConf struct {
 	types.NetConf
 
@@ -143,45 +145,46 @@ func setupContainerVeth(netns ns.NetNS, ifName string, mtu int, pr *current.Resu
 					IP:   ipc.Address.IP.Mask(ipc.Address.Mask),
 					Mask: ipc.Address.Mask,
 				},
-				Scope: netlink.SCOPE_NOWHERE,
+				Scope: netlink.SCOPE_LINK,
 			}
 
 			if err := netlink.RouteDel(&route); err != nil {
 				return fmt.Errorf("failed to delete route %v: %v", route, err)
 			}
 
-			addrBits := 32
-			if ipc.Address.IP.To4() == nil {
-				addrBits = 128
-			}
+			// addrBits := 32
+			// if ipc.Address.IP.To4() == nil {
+			// 	addrBits = 128
+			// }
 
-			for _, r := range []netlink.Route{
-				// Special route to Gateway
-				{
-					LinkIndex: contVeth.Index,
-					Dst: &net.IPNet{
-						IP:   ipc.Gateway,
-						Mask: net.CIDRMask(addrBits, addrBits),
-					},
-					Scope: netlink.SCOPE_LINK,
-					Src:   ipc.Address.IP,
-				},
-				// Routes to other pods(in the same subnet)
-				{
-					LinkIndex: contVeth.Index,
-					Dst: &net.IPNet{
-						IP:   ipc.Address.IP.Mask(ipc.Address.Mask),
-						Mask: ipc.Address.Mask,
-					},
-					Scope: netlink.SCOPE_UNIVERSE,
-					Gw:    ipc.Gateway,
-					Src:   ipc.Address.IP,
-				},
-			} {
-				if err := netlink.RouteAdd(&r); err != nil {
-					return fmt.Errorf("failed to add route %v: %v", r, err)
-				}
-			}
+			// for _, r := range []netlink.Route{
+			// 	// Special route to Gateway
+			// 	{
+			// 		LinkIndex: contVeth.Index,
+			// 		Dst: &net.IPNet{
+			// 			IP:   ipc.Gateway,
+			// 			Mask: net.CIDRMask(addrBits, addrBits),
+			// 		},
+			// 		Scope: netlink.SCOPE_LINK,
+			// 		Src:   ipc.Address.IP,
+			// 	},
+			// 	// Routes to other pods(in the same subnet)
+			// 	// 这里尝试换成cluster-cidr的地址(为了多个节点的通信)
+			// 	{
+			// 		LinkIndex: contVeth.Index,
+			// 		Dst: &net.IPNet{
+			// 			IP:   pr.Routes[0].Dst.IP,
+			// 			Mask: pr.Routes[0].Dst.Mask,
+			// 		},
+			// 		Scope: netlink.SCOPE_UNIVERSE,
+			// 		Gw:    ipc.Gateway,
+			// 		Src:   ipc.Address.IP,
+			// 	},
+			// } {
+			// 	if err := netlink.RouteAdd(&r); err != nil {
+			// 		return fmt.Errorf("failed to add route %v: %v", r, err)
+			// 	}
+			// }
 		}
 
 		return nil
@@ -401,6 +404,18 @@ func loadPodIP(podname string) (string, error) {
 	return ip_str, nil
 }
 
+// set current vxlan id into map
+func setVxlanInfo2NodeMap(vxlan *netlink.Vxlan) error {
+	key := bpfmap.VirtualNetKey{
+		NetType: MODE_VXLAN,
+	}
+	val := bpfmap.VirtualNetValue{
+		IfIndex: uint32(vxlan.Attrs().Index),
+	}
+
+	return bpfmap.SetVxlanMap(key, val)
+}
+
 // attach bpf program to veth device
 //
 // note: veth ingress is binded with bpf prog
@@ -408,6 +423,10 @@ func attachBPF2Veth(veth *netlink.Veth) error {
 	name := veth.Attrs().Name
 	vethIngressPath := tc.GetVethIngressPath()
 	return tc.AttachBPF2Device(name, vethIngressPath, tc.INGRESS)
+}
+
+func createVXLAN(dev string) (*netlink.Vxlan, error) {
+	return ip.SetupVXLAN(dev, 1500)
 }
 
 // attach bpf prog to vxlan(both ingress and egress)
@@ -464,8 +483,10 @@ func cmdAdd(args *skel.CmdArgs) error {
 
 		// Configure the container hardware address and IP address(es)
 		result.IPs = ipamRes.IPs
+		result.Routes = ipamRes.Routes
 	}
 	utils.Log("IPAM plugin success.")
+	utils.Log(fmt.Sprintf("ipam res is %v", result))
 
 	if len(result.IPs) == 0 {
 		return errors.New("IPAM plugin returned missing IP config")
@@ -527,6 +548,25 @@ func cmdAdd(args *skel.CmdArgs) error {
 		return err
 	}
 	utils.Log("veth BPF attach complete!")
+
+	// For multinodes, we need tunnel between different nodes
+	vxlan, err := createVXLAN("vxlan2")
+	if err != nil {
+		return err
+	}
+	utils.Log("vxlan setup complete!")
+
+	err = attachBPF2VXLAN(vxlan)
+	if err != nil {
+		return err
+	}
+	utils.Log("attach bpf to vxlan in/egress complete!")
+
+	err = setVxlanInfo2NodeMap(vxlan)
+	if err != nil {
+		return err
+	}
+	utils.Log("vxlan info written to bpfmap")
 
 	return types.PrintResult(result, cniVersion)
 }

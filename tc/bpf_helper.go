@@ -21,11 +21,11 @@ func GetVethIngressPath() string {
 }
 
 func GetVxlanIngressPath() string {
-	return consts.K8S_CNI_PATH + "/vxlan_ingress.o"
+	return consts.K8S_CNI_PATH + "/vxlan_ingress.bpf.o"
 }
 
 func GetVxlanEgressPath() string {
-	return consts.K8S_CNI_PATH + "/vxlan_egress.o"
+	return consts.K8S_CNI_PATH + "/vxlan_egress.bpf.o"
 }
 
 // Check if there is alreay bpf prog binded to device's ingress queue

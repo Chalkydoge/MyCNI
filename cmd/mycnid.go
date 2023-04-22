@@ -96,7 +96,7 @@ func RunController(conf *DaemonConf) error {
 	return mgr.Start(signals.SetupSignalHandler())
 }
 
-func main() {
+func notmain() {
 	logf.SetLogger(zap.New())
 
 	conf := &DaemonConf{}

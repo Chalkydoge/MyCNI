@@ -33,7 +33,7 @@ func envCleanup() {
 
 func CmdAdd(cniNetns, cniContainerID, cniIfname string, conf []byte, f func() error) (types.Result, []byte, error) {
 	os.Setenv("CNI_COMMAND", "ADD")
-	os.Setenv("CNI_PATH", os.Getenv("PATH"))
+	os.Setenv("CNI_PATH", "/usr/local/bin")
 	os.Setenv("CNI_NETNS", cniNetns)
 	os.Setenv("CNI_IFNAME", cniIfname)
 	os.Setenv("CNI_CONTAINERID", cniContainerID)
@@ -83,7 +83,7 @@ func CmdAddWithArgs(args *skel.CmdArgs, f func() error) (types.Result, []byte, e
 
 func CmdCheck(cniNetns, cniContainerID, cniIfname string, conf []byte, f func() error) error {
 	os.Setenv("CNI_COMMAND", "CHECK")
-	// os.Setenv("CNI_PATH", os.Getenv("PATH"))
+	os.Setenv("CNI_PATH", "/usr/local/bin")
 	os.Setenv("CNI_NETNS", cniNetns)
 	os.Setenv("CNI_IFNAME", cniIfname)
 	os.Setenv("CNI_CONTAINERID", cniContainerID)

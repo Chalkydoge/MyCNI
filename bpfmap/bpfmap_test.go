@@ -100,3 +100,122 @@ func TestIterate(t *testing.T) {
 	}
 	t.Log(keys)
 }
+
+func TestVxlanMap(t *testing.T) {
+	mp, err := CreateVxlanMap()
+	if err != nil {
+		t.Log(err)
+	}
+
+	key := &VirtualNetKey{
+		NetType: MODE_VXLAN,
+	}
+	val := &VirtualNetValue{
+		IfIndex: 114514,
+	}
+	err = mp.Put(key, val)
+	if err != nil {
+		t.Log(err)
+	}
+
+	// 遍历一下
+	iter := mp.Iterate()
+	keys := []VirtualNetKey{}
+	var tmp VirtualNetKey
+	var value VirtualNetValue
+
+	for iter.Next(&tmp, &value) {
+		keys = append(keys, tmp)
+	}
+	t.Log(keys)
+
+	_, err = ResetVxlanMap()
+	if err != nil {
+		t.Log(err)
+	}
+}
+
+func TestNodeCIDRMap(t *testing.T) {
+	mp, err := CreateNodeCIDRMap()
+	if err != nil {
+		t.Log(err)
+	}
+
+	// 遍历一下
+	iter := mp.Iterate()
+	keys := []NodeCIDRKey{}
+	var tmp NodeCIDRKey
+	var value NodeCIDRValue
+
+	for iter.Next(&tmp, &value) {
+		keys = append(keys, tmp)
+	}
+	t.Log(keys)
+	t.Log(value)
+}
+
+// 给两个节点写好cidr 然后给vxlan设备map写入对应的编号
+func TestSetupvxlan(t *testing.T) {
+	mp, err := CreateVxlanMap()
+	if err != nil {
+		t.Log(err)
+	}
+	key := &VirtualNetKey{
+		NetType: MODE_VXLAN,
+	}
+	val := &VirtualNetValue{
+		IfIndex: 1021,
+	}
+	err = mp.Put(key, val)
+	if err != nil {
+		t.Log(err)
+	}
+	t.Log("Vxlan dev map ok!")
+
+	node_mp, err := CreateNodeCIDRMap()
+	if err != nil {
+		t.Log(err)
+	}
+
+	node_key := &NodeCIDRKey{
+		PodIPCIDR: InetIpToUInt32("10.244.1.0"),
+	}
+	node_val := &NodeCIDRValue{
+		RealIP: InetIpToUInt32("10.176.35.11"),
+	}
+	err = node_mp.Put(node_key, node_val)
+	if err != nil {
+		t.Log(err)
+	}
+
+	node_key = &NodeCIDRKey{
+		PodIPCIDR: InetIpToUInt32("10.244.0.0"),
+	}
+	node_val = &NodeCIDRValue{
+		RealIP: InetIpToUInt32("10.176.35.14"),
+	}
+	err = node_mp.Put(node_key, node_val)
+	if err != nil {
+		t.Log(err)
+	}
+
+	t.Log("Node cidr map set complete!")
+}
+
+func TestDelvxlan(t *testing.T) {
+	_, err := ResetVxlanMap()
+	if err != nil {
+		t.Log(err)
+	}
+	t.Log("Vxlan dev empty")
+
+	_, err = ResetNodeCIDRMap()
+	if err != nil {
+		t.Log(err)
+	}
+	t.Log("Node cidr map empty")
+}
+
+// tc qdisc del dev vethbbde6589 clsact
+// tc qdisc add dev vethbbde6589 clsact
+// tc filter replace dev vethbbde6589 ingress handle 0x1 bpf da obj veth_ingress.bpf.o

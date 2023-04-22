@@ -1,30 +1,34 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net"
-	"errors"
 	"runtime"
 
 	"mycni/pkg/config"
 	"mycni/plugins/ipam/local/store"
-	
+
 	"github.com/containernetworking/cni/pkg/skel"
 	"github.com/containernetworking/cni/pkg/types"
-	cip "github.com/containernetworking/plugins/pkg/ip"
 	current "github.com/containernetworking/cni/pkg/types/100"
 	"github.com/containernetworking/cni/pkg/version"
+	cip "github.com/containernetworking/plugins/pkg/ip"
 	bv "github.com/containernetworking/plugins/pkg/utils/buildversion"
 )
 
 type IPAM struct {
-	subnet  	*net.IPNet
-	gateway 	net.IP
-	store   	*store.Store
+	subnet  *net.IPNet
+	gateway net.IP
+	store   *store.Store
 }
 
 var (
 	IPOverflowError = errors.New("ip overflow")
+)
+
+const (
+	ClusterCIDR = "10.244.0.0/16"
 )
 
 func init() {
@@ -34,7 +38,6 @@ func init() {
 func main() {
 	skel.PluginMain(cmdAdd, cmdCheck, cmdDel, version.All, bv.BuildString("local"))
 }
-
 
 // 根据cni配置初始化ipam
 func NewIPAM(conf *config.CNIConf, s *store.Store) (*IPAM, error) {
@@ -166,19 +169,31 @@ func cmdAdd(args *skel.CmdArgs) error {
 	if err != nil {
 		return err
 	}
-	
+
 	gateway := ipam.Gateway()
 	allocated_ip, err := ipam.AllocateIP(args.ContainerID, args.IfName)
 	if err != nil {
 		return err
 	}
-	
+
+	_, cidr, err := net.ParseCIDR(ClusterCIDR)
+	if err != nil {
+		return err
+	}
+
+	// 这里额外添加一条路由规则 用于跨节点的通信情况
 	result := &current.Result{
 		CNIVersion: current.ImplementedSpecVersion,
 		IPs: []*current.IPConfig{
 			{
 				Address: net.IPNet{IP: allocated_ip, Mask: ipam.Mask()},
 				Gateway: gateway,
+			},
+		},
+		Routes: []*types.Route{
+			{
+				Dst: net.IPNet{IP: cidr.IP, Mask: cidr.Mask},
+				GW:  gateway,
 			},
 		},
 	}

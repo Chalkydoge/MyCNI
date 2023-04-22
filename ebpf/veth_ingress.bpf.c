@@ -10,7 +10,9 @@
 #define TC_ACT_OK	0
 #define ETH_P_IP	0x0800		/* Internet Protocol packet	*/
 #define ETH_ALEN    6           /* Ethernet Address len*/
+#define MODE_VXLAN  1
 
+// BPF mapping for local pods
 struct epInfo {
     __u32 lxc_ifindex;       // inside host
     __u32 pod_ifindex;       // inside pod
@@ -20,11 +22,48 @@ struct epInfo {
 
 struct {
     __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries, 10);
+    __uint(max_entries, 32);
     __type(key, __u32);
     __type(value, struct epInfo);
     __uint(pinning, LIBBPF_PIN_BY_NAME);
 } lxc_map SEC(".maps");
+
+
+// BPF mapping for ip belongs to which node, get the node's real ip
+struct nodeInfo {
+    __u32 node_cidr; // cidr belongs to which node
+};
+
+struct nodeValue {
+    __u32 node_ip; // target node's real ip
+};
+
+struct {
+    __uint(type, BPF_MAP_TYPE_HASH);
+    __uint(max_entries, 64);
+    __type(key, struct nodeInfo);
+    __type(value, struct nodeValue);
+    __uint(pinning, LIBBPF_PIN_BY_NAME);
+} node_map SEC(".maps");
+
+
+// BPF Mapping for vxlan device index
+struct virtualNetKey {
+    __u32 type;
+};
+
+struct virtualNetValue {
+    __u32 ifindex;
+};
+
+struct {
+    __uint(type, BPF_MAP_TYPE_HASH);
+    __uint(max_entries, 8);
+    __type(key, struct virtualNetKey);
+    __type(value, struct virtualNetValue);
+    __uint(pinning, LIBBPF_PIN_BY_NAME);
+} node_vxlan_map SEC(".maps");
+
 
 SEC("classifier") // bind to the section of 'tc'
 int veth_ingress(struct __sk_buff *ctx)
@@ -77,6 +116,23 @@ int veth_ingress(struct __sk_buff *ctx)
         bpf_skb_store_bytes(ctx, offsetof(struct ethhdr, h_dest), dst_mac, ETH_ALEN, 0);
         
         return bpf_redirect_peer(ep->lxc_ifindex, 0);
+    }
+
+    // Lookup target node info with given ip
+    __u32 wrapped_ip = (dst_ip & (~0xFF));
+    struct nodeInfo nodeKey = {}
+    nodeKey.node_cidr = wrapped_ip;
+
+    struct nodeValue* nodeVal = bpf_map_lookup_elem(&node_map, &nodeKey);
+    if (nodeVal) {
+        struct virtualNetKey vk = {};
+        vk.type = MODE_VXLAN;
+
+        struct virtualNetVal *vv = bpf_map_lookup_elem(&node_vxlan_map, &vk);
+        if (vv) {
+            return bpf_redirect(vv->ifindex, 0);
+        }
+        return TC_ACT_UNSPEC;
     }
 
     // Then, the packet is not to pod on same node, handling to host's gateway

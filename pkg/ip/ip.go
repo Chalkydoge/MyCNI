@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"os/exec"
 
 	"github.com/safchain/ethtool"
 	"github.com/vishvananda/netlink"
@@ -31,6 +32,22 @@ import (
 var (
 	ErrLinkNotFound = errors.New("link not found")
 )
+
+func makeVxlan(name string, mtu int) (netlink.Link, error) {
+	vxlan := &netlink.Vxlan{
+		LinkAttrs: netlink.LinkAttrs{
+			Name: name,
+			MTU:  mtu,
+		},
+		VxlanId:      1,
+		VtepDevIndex: 114514,
+		TTL:          64,
+	}
+	if err := netlink.LinkAdd(vxlan); err != nil {
+		return nil, err
+	}
+	return vxlan, nil
+}
 
 // makeVethPair is called from within the container's network namespace
 func makeVethPair(name, peer string, mtu int, mac string, hostNS ns.NetNS) (netlink.Link, error) {
@@ -259,3 +276,53 @@ func GetVethPeerIfindex(ifName string) (netlink.Link, int, error) {
 
 	return link, peerIndex, nil
 }
+
+func SetupVXLAN(vxlanName string, mtu int) (*netlink.Vxlan, error) {
+	l, _ := netlink.LinkByName(vxlanName)
+	vxlan, ok := l.(*netlink.Vxlan)
+	if ok && vxlan != nil {
+		return vxlan, nil
+	}
+
+	if mtu == 0 {
+		mtu = 1500
+	}
+
+	processInfo := exec.Command(
+		"/bin/sh", "-c",
+		fmt.Sprintf("ip link add %s type vxlan dstport 4789 dev eno1 external", vxlanName),
+	)
+	_, err := processInfo.Output()
+	if err != nil {
+		return nil, err
+	}
+
+	l, err = netlink.LinkByName(vxlanName)
+	if err != nil {
+		return nil, err
+	}
+
+	vxlan, ok = l.(*netlink.Vxlan)
+	if !ok {
+		return nil, fmt.Errorf("found the device %q but it's not a vxlan", vxlanName)
+	}
+
+	// Add ip address to vxlan2
+	processInfo = exec.Command(
+		"/bin/sh", "-c",
+		fmt.Sprintf("ip addr add 10.244.0.0/16 dev %s", vxlanName),
+	)
+	_, err = processInfo.Output()
+	if err != nil {
+		return nil, err
+	}
+
+	// setup vxlan device
+	if err = netlink.LinkSetUp(vxlan); err != nil {
+		return nil, fmt.Errorf("set up vxlan %q error, err: %v", vxlanName, err)
+	}
+	return vxlan, nil
+}
+
+// 指定UDP端口4789 然后所有走这个设备的流量的IP都是node-ip
+// ip link add name {foo1} type vxlan external dstport 4789 local {IP}

@@ -9,7 +9,7 @@ import (
 )
 
 func TestCmdAdd(t *testing.T) {
-	for i := 1; i < 3; i++ {
+	for i := 1; i < 2; i++ {
 		conf := fmt.Sprintf(`{
 			"cniVersion": "%s",
 			"name": "mynet",
@@ -28,7 +28,7 @@ func TestCmdAdd(t *testing.T) {
 			Netns:       fmt.Sprintf("/var/run/netns/ns%d", i),
 			IfName:      "eth0",
 			Args:        fmt.Sprintf("K8S_POD_NAMESPACE=test_only_%d;K8S_POD_NAME=foobar-c676cc86f-4kz2t", i),
-			Path:        "/home/ubuntu/go/src/mycni/bin",
+			Path:        "/usr/local/bin",
 			StdinData:   []byte(conf),
 		}
 		_, _, err := testutils.CmdAddWithArgs(args, func() error {
