@@ -106,3 +106,16 @@ Apr 10 16:14:51 master kubelet[12039]: E0410 16:14:51.907746   12039 generic.go:
 ```bash
 export PATH=$PATH:/usr/local/go/bin
 ```
+
+patch a node's cidr:
+
+```
+kubectl patch node worker1 -p '{"spec":{"podCIDR":"10.245.0.0/16"}}'
+```
+
+kubeadm join 10.176.35.14:6443 --token w82742.stxvv135vyn8qs3b --discovery-token-ca-cert-hash sha256:12961d4023409876cc6b79072ce219dad9fe81013f59335220a8ba3c793e85e0
+
+kubeadm token create
+
+openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'
+

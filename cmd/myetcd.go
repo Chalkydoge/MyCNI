@@ -7,20 +7,22 @@ import (
 	"errors"
 	"fmt"
 	"mycni/pkg/config"
-	"mycni/plugins/ipam/local/store"
 	"net"
 	"strconv"
 	"strings"
 
 	curLog "log"
 
-	etcd "go.etcd.io/etcd/client/v3"
-	"go.etcd.io/etcd/pkg/transport"
-
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
+
+	etcd "go.etcd.io/etcd/client/v3"
+	"go.etcd.io/etcd/pkg/transport"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 var (
@@ -61,6 +63,34 @@ type EtcdManager struct {
 	kvApi      etcd.KV      // kvapi
 	cli        *etcd.Client // 实际的客户端对象
 	etcdConfig *EtcdConfig  // etcd配置
+}
+
+func ListNodeFromK8s(ctx context.Context) error {
+	apiUrl := ""
+	kubeconfigPath := "/root/.kube/config"
+	cfg, err := clientcmd.BuildConfigFromFlags(apiUrl, kubeconfigPath)
+	if err != nil {
+		return err
+	}
+	c, err := clientset.NewForConfig(cfg)
+	fmt.Println("k8s Client ok!")
+
+	nodes, err := c.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return err
+	}
+
+	for _, nodes := range nodes.Items {
+		// fmt.Print(nodes)
+		fmt.Printf("Nodename: %s\n", nodes.Name)
+		tmp := nodes.Status.Addresses[0]
+		fmt.Println(tmp.Address)
+	}
+	return nil
+	// The kube subnet mgr needs to know the k8s node name that it's running on so it can annotate it.
+	// If we're running as a pod then the POD_NAME and POD_NAMESPACE will be populated and can be used to find the node
+	// name. Otherwise, the environment variable NODE_NAME can be passed in.
+	// sm, err := newKubeSubnetManager(ctx, c, sc, nodeName, prefix, useMultiClusterCidr)
 }
 
 func shutdownHandler(ctx context.Context, sigs chan os.Signal, cancel context.CancelFunc) {
@@ -184,7 +214,7 @@ func (em *EtcdManager) RenewBitMask(ctx context.Context, bitmask string) error {
 
 	// 通过发起一个事务查看之前是否存在这个key
 	req := etcd.OpPut(key, bitmask, etcd.WithLease(lresp.ID))
-	cond := etcd.Compare(etcd.Version(key), ">=", 0)
+	cond := etcd.Compare(etcd.Version(key), ">", 0)
 
 	tresp, err := em.cli.Txn(ctx).If(cond).Then(req).Commit()
 	if err != nil {
@@ -238,8 +268,12 @@ func (em *EtcdManager) WatchBitMask(ctx context.Context) (string, error) {
 	}
 
 	// 从tresp中提取相应的结果
-	kvs := tresp.OpResponse().Get().Kvs
-	bitmask := string(kvs[0].Value)
+	bitmask := "000"
+	for _, rp := range tresp.Responses {
+		for _, ev := range rp.GetResponseRange().Kvs {
+			bitmask = string(ev.Value)
+		}
+	}
 	return bitmask, nil
 }
 
@@ -280,6 +314,7 @@ func checkLocalSubnetFileSettings() (int, error) {
 		if err != nil {
 			return -1, err
 		}
+		// curLog.Print(bit)
 		return bit, nil
 	}
 	return -1, fmt.Errorf("IPv6 Address not implemented!")
@@ -289,13 +324,13 @@ func updateLocalSubnetConfig(notUsed int) error {
 	// 对指定的文件夹加锁
 	// 根据etcd中存储的bitmask
 	// 然后创建相应的subnet.json配置
-	fileLock, err := store.NewFileLock(config.DefaultSubnetFile)
-	if err != nil {
-		curLog.Fatal("Cannot create subnet.json file at dir!")
-	}
+	// fileLock, err := store.NewFileLock(config.DefaultSubnetFile)
+	// if err != nil {
+	// 	curLog.Fatal("Cannot create subnet.json file at dir!")
+	// }
 
-	fileLock.Lock()
-	defer fileLock.Unlock()
+	// fileLock.Lock()
+	// defer fileLock.Unlock()
 
 	conf := &config.SubnetConf{
 		Bridge: "mycni0",
@@ -378,10 +413,24 @@ func main() {
 		}
 
 		if curBit >= 0 && curBit <= 255 {
-			curLog.Println("Checking current config ok, with subnet 10.244.%d.0/24", curBit)
-			continue
+			curLog.Printf("Checking current config ok, with subnet 10.244.%d.0/24", curBit)
 		} else {
 			curLog.Fatal("Invalid subnet cidr in subnet.json!")
 		}
+
+		nodes, err := sm.NodeNames(ctx)
+		if err != nil {
+			curLog.Fatal(err)
+		}
+		for _, node := range nodes {
+			curLog.Println(node)
+		}
+
+		err = ListNodeFromK8s(ctx)
+		if err != nil {
+			curLog.Fatal(err)
+		}
+		break
+
 	}
 }
